@@ -270,7 +270,7 @@ const ROLES={
   financeiro:{label:'Financeiro',  color:'#e05252',bg:'#2a0f0f',nav:['vendas','orcamentos','relatorio','backup','perfil']},
   visualizador:{label:'Visualizador',color:'#8899b0',bg:'#1e2535',nav:['estoque','relatorio','perfil']},
 };
-const NAV_LABELS={estoque:'Estoque',cadastro:'+ Veículo',fotos:'Fotos',documentos:'Documentos',vendas:'Vendas',vistoria:'⚡ Vistoria',vendedores:'Vendedores',anuncios:'Anúncios',orcamentos:'Orçamentos',seguradora:'Seguradora',relatorio:'Relatório',backup:'💾 Backup',usuarios:'Usuários',perfil:'Meu Perfil'};
+const NAV_LABELS={estoque:'Estoque',cadastro:'+ Veículo',fotos:'Fotos',documentos:'Documentos',vendas:'Vendas',vistoria:'⚡ Vistoria',vendedores:'Vendedores',anuncios:'Anúncios',orcamentos:'Orçamentos',seguradora:'Associação',relatorio:'Relatório',backup:'💾 Backup',usuarios:'Usuários',perfil:'Meu Perfil'};
 const NAV_ORDER=['estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','usuarios','perfil'];
 
 // ══ SESSION ════════════════════════════════════════════════════
@@ -292,9 +292,13 @@ function getUsers(){
 // ── URL do servidor N2 AutoSYS ────────────────────────────────────
 const API_URL='https://n2autosys-backend.onrender.com';
 
-// ── Slug fixo para esta empresa ───────────────────────────────────
+// ── Detecta o tenant pelo subdomínio ou usa o padrão ─────────────
 function getTenantSlug(){
-  return 'n2autosys_nickel';
+  const host=window.location.hostname;
+  const parts=host.split('.');
+  if(parts.length>=3&&parts[0]!=='www')return parts[0];
+  // fallback: pega do localStorage (para uso local/testes)
+  return localStorage.getItem('ag4_tenant')||'n2autosys_nickel';
 }
 
 async function doLogin(){
@@ -304,21 +308,11 @@ async function doLogin(){
 
   const btn=document.querySelector('.login-btn');
   const origText=btn.textContent;
-  btn.textContent='⏳ Conectando...';btn.disabled=true;
-  btn.style.opacity='0.7';
-
-  // Mostra aviso de carregamento
-  const errEl2=document.getElementById('login-err');
-  errEl2.style.background='var(--greenbg)';
-  errEl2.style.borderColor='var(--green3)';
-  errEl2.style.color='var(--green)';
-  errEl2.textContent='Conectando ao servidor... (pode levar até 60s na primeira vez)';
-  errEl2.style.display='block';
+  btn.textContent='Entrando...';btn.disabled=true;
 
   try{
     // Tenta login no servidor real
     const resp=await fetch(API_URL+'/api/auth/login',{
-      mode:'cors',
       method:'POST',
       headers:{'Content-Type':'application/json','X-Tenant-Slug':getTenantSlug()},
       body:JSON.stringify({username:u,password:p})
@@ -372,15 +366,7 @@ async function doLogin(){
       toast('⚠️ Modo offline — servidor indisponível','#f5a623');
     }
   }finally{
-    btn.textContent=origText;
-    btn.disabled=false;
-    btn.style.opacity='1';
-    // Reseta estilo do aviso
-    const errReset=document.getElementById('login-err');
-    errReset.style.background='';
-    errReset.style.borderColor='';
-    errReset.style.color='';
-    if(errReset.textContent.includes('Conectando'))errReset.style.display='none';
+    btn.textContent=origText;btn.disabled=false;
   }
 }
 
@@ -1172,23 +1158,7 @@ function exportarExcel(){
 }
 
 // ══ USUÁRIOS ══════════════════════════════════════════════════
-async function renderUsuarios(sec){
-  if(CU?.fromServer){
-    try{
-      const data=await apiRequest('GET','/api/usuarios');
-      if(data?.usuarios){
-        // Mescla com usuário local para não perder o admin
-        const serverUsers=data.usuarios.map(u=>({
-          id:u.id, nome:u.nome, username:u.username,
-          email:u.email||'', cargo:u.cargo,
-          telefone:u.telefone||'', ativo:u.ativo,
-          criadoEm:u.criado_em?new Date(u.criado_em).toLocaleDateString('pt-BR'):'—',
-          fromServer:true
-        }));
-        save(KU, serverUsers);
-      }
-    }catch(e){console.warn('Usando cache local de usuários');}
-  }
+function renderUsuarios(sec){
   const users=getUsers();
   sec.innerHTML=`<div class="row-between"><h3>Usuários do sistema</h3><button class="btn-p" onclick="openCadU()">+ Novo usuário</button></div>
   <div class="card"><div class="card-title">Usuários cadastrados <span style="font-size:11px;font-weight:400;color:var(--text3)">${users.length}</span></div>
@@ -1221,52 +1191,19 @@ function openCadU(id){
     <div class="fg"><div class="fl">Telefone</div><input id="cu-t" value="${u?.telefone||''}" placeholder="(41) 99999-0000"/></div></div>
     <div style="display:flex;gap:8px"><button class="btn-p" onclick="salvarU()">Salvar</button><button class="btn-g" onclick="closeMD()">Cancelar</button></div>`);
 }
-async function salvarU(){
-  const nome=document.getElementById('cu-n').value.trim();
-  const username=document.getElementById('cu-u').value.trim().toLowerCase();
-  const senha=document.getElementById('cu-p').value;
-  const editId=document.getElementById('cu-id').value;
+function salvarU(){
+  const nome=document.getElementById('cu-n').value.trim(),username=document.getElementById('cu-u').value.trim().toLowerCase();
+  const pass=document.getElementById('cu-p').value,id=document.getElementById('cu-id').value||uid();
   if(!nome||!username){toast('Preencha nome e usuário','#e05252');return}
-  if(!editId&&!senha){toast('Informe a senha','#e05252');return}
-
-  const uData={
-    nome, username,
-    email:document.getElementById('cu-e').value.trim(),
-    cargo:document.getElementById('cu-c').value,
-    telefone:document.getElementById('cu-t').value.trim(),
-    ...(senha?{senha}:{})
-  };
-
-  if(CU?.fromServer){
-    try{
-      const resp=editId
-        ? await apiRequest('PUT','/api/usuarios/'+editId,uData)
-        : await apiRequest('POST','/api/usuarios',uData);
-      if(resp?.usuario){
-        toast('Usuário salvo!');closeMD();showSec('usuarios');return;
-      }
-      if(resp?.error){toast(resp.error,'#e05252');return;}
-    }catch(e){toast('Erro de conexão — salvando localmente','#f5a623');}
-  }
-  // Fallback local
-  const id=editId||uid();
   const users=getUsers();const existing=users.find(x=>x.id===id);
-  const u={id,nome,username,password:senha||(existing?.password||''),
-    email:uData.email,cargo:uData.cargo,telefone:uData.telefone,
-    criadoEm:existing?.criadoEm||new Date().toLocaleDateString('pt-BR')};
+  const u={id,nome,username,password:pass||(existing?.password||''),email:document.getElementById('cu-e').value.trim(),cargo:document.getElementById('cu-c').value,telefone:document.getElementById('cu-t').value.trim(),criadoEm:existing?.criadoEm||new Date().toLocaleDateString('pt-BR')};
   if(!u.password){toast('Informe a senha','#e05252');return}
   const idx=users.findIndex(x=>x.id===id);if(idx>=0)users[idx]=u;else users.push(u);
   save(KU,users);closeMD();toast('Usuário salvo!');showSec('usuarios');
 }
-async function excluirU(id){
+function excluirU(id){
   if(id===CU?.id){toast('Não pode excluir seu próprio usuário','#e05252');return}
-  if(!confirm('Excluir usuário?'))return;
-  if(CU?.fromServer){
-    try{await apiRequest('DELETE','/api/usuarios/'+id);}
-    catch(e){console.warn('Erro ao excluir no servidor');}
-  }
-  save(KU,load(KU).filter(x=>x.id!==id));
-  toast('Usuário excluído');showSec('usuarios');
+  if(!confirm('Excluir usuário?'))return;save(KU,load(KU).filter(x=>x.id!==id));toast('Excluído');showSec('usuarios');
 }
 
 // ══ PERFIL ════════════════════════════════════════════════════
@@ -1779,14 +1716,14 @@ function gerarOrcamentoPDF(id){
   URL.revokeObjectURL(url);toast('Orçamento gerado! Abra e imprima como PDF.');
 }
 
-// ══ SEGURADORA ════════════════════════════════════════════════
+// ══ ASSOCIAÇÃO ════════════════════════════════════════════════
 function renderSeguradora(sec){
   const seguros=load(KSEG);
   sec.innerHTML=`
   <div class="row-between">
-    <h3>Veículos Segurados</h3>
+    <h3>Veículos Associados</h3>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <input id="seg-search" placeholder="Buscar placa, segurado, apólice..." style="width:210px;font-size:12px;padding:6px 9px" oninput="filtrarSeguros()"/>
+      <input id="seg-search" placeholder="Buscar placa, associado, apólice..." style="width:210px;font-size:12px;padding:6px 9px" oninput="filtrarSeguros()"/>
       <select id="seg-filter-tipo" style="font-size:12px;padding:6px 9px" onchange="filtrarSeguros()">
         <option value="">Todos os tipos de apólice</option>
         <option>Compreensivo</option>
@@ -1795,7 +1732,7 @@ function renderSeguradora(sec){
         <option>Total</option>
         <option>Outros</option>
       </select>
-      <button class="btn-p" onclick="openNovoSeguro()">+ Cadastrar veículo segurado</button>
+      <button class="btn-p" onclick="openNovoSeguro()">+ Cadastrar veículo associado</button>
     </div>
   </div>
   <div id="seg-lista">${renderListaSeguros(seguros)}</div>`;
@@ -1804,8 +1741,8 @@ function renderSeguradora(sec){
 function renderListaSeguros(lista){
   if(!lista.length)return`<div class="empty-state" style="padding:48px 20px">
     <div style="font-size:32px;margin-bottom:10px">🛡️</div>
-    Nenhum veículo segurado cadastrado ainda.<br/>
-    <span style="font-size:12px">Clique em "+ Cadastrar veículo segurado" para começar.</span>
+    Nenhum veículo associado cadastrado ainda.<br/>
+    <span style="font-size:12px">Clique em "+ Cadastrar veículo associado" para começar.</span>
   </div>`;
 
   return`<div style="display:flex;flex-direction:column;gap:10px">`+lista.map(s=>{
@@ -1835,10 +1772,10 @@ function renderListaSeguros(lista){
       <!-- Dados em grade -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--border)">
         ${[
-          ['Segurado',s.nomeSegurado||'—'],
+          ['Associado',s.nomeSegurado||'—'],
           ['CPF / CNPJ',s.cpfSegurado||'—'],
           ['Telefone',s.telSegurado||'—'],
-          ['Seguradora',s.seguradora||'—'],
+          ['Associação',s.seguradora||'—'],
           ['Nº da Apólice',s.apolice||'—'],
           ['Tipo de Cobertura',s.tipoApolice||'—'],
         ].map(([l,v],i)=>`<div style="padding:10px 14px;border-right:${i%3!==2?'1px solid var(--border)':'none'};border-bottom:${i<3?'1px solid var(--border)':'none'}">
@@ -1884,7 +1821,7 @@ function filtrarSeguros(){
 function openNovoSeguro(id){
   const lista=load(KSEG);
   const s=id?lista.find(x=>x.id===id):null;
-  openModal(s?'Editar veículo segurado':'Cadastrar veículo segurado',`
+  openModal(s?'Editar veículo associado':'Cadastrar veículo associado',`
     <input type="hidden" id="sid" value="${s?.id||''}"/>
     <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados do veículo</div>
     <div class="frow three" style="margin-bottom:10px">
@@ -1900,9 +1837,9 @@ function openNovoSeguro(id){
       <div class="fg"><div class="fl">Chassi</div><input id="sg-chassi" value="${s?.chassi||''}" placeholder="9BW..."/></div>
     </div>
     <div style="height:1px;background:var(--border);margin-bottom:12px"></div>
-    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados do segurado</div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados do associado</div>
     <div class="frow" style="margin-bottom:10px">
-      <div class="fg"><div class="fl">Nome do segurado *</div><input id="sg-nome" value="${s?.nomeSegurado||''}" placeholder="João da Silva"/></div>
+      <div class="fg"><div class="fl">Nome do associado *</div><input id="sg-nome" value="${s?.nomeSegurado||''}" placeholder="João da Silva"/></div>
       <div class="fg"><div class="fl">CPF / CNPJ</div><input id="sg-cpf" value="${s?.cpfSegurado||''}" placeholder="000.000.000-00"/></div>
     </div>
     <div class="frow full" style="margin-bottom:12px">
@@ -1911,7 +1848,7 @@ function openNovoSeguro(id){
     <div style="height:1px;background:var(--border);margin-bottom:12px"></div>
     <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados da apólice</div>
     <div class="frow" style="margin-bottom:10px">
-      <div class="fg"><div class="fl">Seguradora *</div><input id="sg-seg" value="${s?.seguradora||''}" placeholder="Porto Seguro, Bradesco..."/></div>
+      <div class="fg"><div class="fl">Associação *</div><input id="sg-seg" value="${s?.seguradora||''}" placeholder="Nome da associação..."/></div>
       <div class="fg"><div class="fl">Nº da apólice</div><input id="sg-apolice" value="${s?.apolice||''}" placeholder="00123456"/></div>
     </div>
     <div class="frow" style="margin-bottom:10px">
@@ -1955,8 +1892,8 @@ function salvarSeguro(){
   const seg=document.getElementById('sg-seg')?.value.trim();
   const tipo=document.getElementById('sg-tipo')?.value;
   if(!placa){toast('Informe a placa do veículo','#e05252');return}
-  if(!nome){toast('Informe o nome do segurado','#e05252');return}
-  if(!seg){toast('Informe a seguradora','#e05252');return}
+  if(!nome){toast('Informe o nome do associado','#e05252');return}
+  if(!seg){toast('Informe a associação','#e05252');return}
   const id=document.getElementById('sid').value||uid();
   const s={
     id,placa,
@@ -1979,7 +1916,7 @@ function salvarSeguro(){
   };
   const lista=load(KSEG);const idx=lista.findIndex(x=>x.id===id);
   if(idx>=0)lista[idx]=s;else lista.unshift(s);
-  save(KSEG,lista);closeMD();toast('Veículo segurado cadastrado!');showSec('seguradora');
+  save(KSEG,lista);closeMD();toast('Veículo associado cadastrado!');showSec('seguradora');
 }
 
 function excluirSeguro(id){
