@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>N2 AutoSYS — Sistema de Sistemas para Controle Automotivo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg0:#0f1117;--bg1:#161b24;--bg2:#1e2535;--bg3:#252e3f;
+  --border:#2a3347;--border2:#334060;
+  --text:#e8edf5;--text2:#8899b0;--text3:#556070;
+  --green:#E8A020;--green2:#C8881A;--green3:#9A6510;--greenbg:#2A1E05;
+  --amber:#f5a623;--amberbg:#2a1f0a;
+  --red:#e05252;--redbg:#2a0f0f;
+  --blue:#4a9eff;--bluebg:#0a1a2a;
+  --purple:#a78bfa;--purplebg:#1a1030;
+  --lime:#b8f542;--limebg:#2A1E05;
+  font-family:'Barlow',sans-serif;
+}
+body{background:var(--bg0);color:var(--text);min-height:100vh}
+
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg0);padding:24px;position:relative;overflow:hidden}
+.login-wrap::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(232,160,32,.12) 0%,transparent 70%);pointer-events:none}
+.login-wrap::after{content:'';position:absolute;bottom:-80px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(184,245,66,.07) 0%,transparent 70%);pointer-events:none}
+.login-box{background:var(--bg1);border:1px solid var(--border2);border-radius:18px;padding:40px 36px;width:100%;max-width:400px;position:relative;z-index:1}
+.login-logo{display:flex;align-items:center;gap:11px;margin-bottom:32px;justify-content:center}
+.login-logo-icon{width:40px;height:40px;background:var(--green);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.login-logo-icon svg{width:22px;height:22px;fill:#0f1117}
+.login-brand{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--text)}
+.login-heading{font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px;text-align:center}
+.login-sub{font-size:13px;color:var(--text3);text-align:center;margin-bottom:28px}
+.login-err{background:var(--redbg);border:1px solid #4a1f1f;color:var(--red);border-radius:8px;padding:10px 13px;font-size:12px;margin-bottom:14px;display:none}
+.lf{margin-bottom:14px}
+.ll{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:block}
+.li{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-size:14px;color:var(--text);font-family:'Barlow',sans-serif;outline:none;transition:border-color .15s}
+.li:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(232,160,32,.12)}
+.li::placeholder{color:var(--text3)}
+.login-btn{width:100%;background:var(--green);color:#0f1117;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;margin-top:4px;transition:background .15s}
+.login-btn:hover{background:var(--green2)}
+.login-hint{font-size:11px;color:var(--text3);text-align:center;margin-top:18px;line-height:1.7}
+
+/* ── APP SHELL ── */
+.app{display:none;flex-direction:column;min-height:100vh}
+.topbar{background:var(--bg1);border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:9px;flex-shrink:0;letter-spacing:-.01em}
+.logo-icon{width:28px;height:28px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:16px;height:16px;fill:#0f1117}
+.nav{display:flex;gap:2px;flex-wrap:wrap}
+.nb{background:none;border:1px solid transparent;border-radius:7px;padding:5px 11px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'Barlow',sans-serif}
+.nb:hover{background:var(--bg2);color:var(--text);border-color:var(--border)}
+.nb.active{background:var(--bg3);color:var(--text);border-color:var(--border2);font-weight:600}
+.nb.highlight{border-color:var(--lime);color:var(--lime)}
+.nb.highlight:hover{background:var(--limebg)}
+.user-area{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.user-badge{display:flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;cursor:pointer}
+.user-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0f1117;flex-shrink:0}
+.user-name{font-size:12px;color:var(--text);font-weight:500}
+.role-tag{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;white-space:nowrap}
+.logout-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'Barlow',sans-serif}
+.logout-btn:hover{background:var(--redbg);color:var(--red);border-color:#4a1f1f}
+.content{padding:18px;flex:1}
+.sec{display:none}.sec.active{display:block}
+
+/* ── CARDS / STATS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:18px}
+.sc{background:var(--bg1);border:1px solid var(--border);border-radius:10px;padding:13px 15px}
+.sc-lbl{font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.sc-val{font-size:22px;font-weight:800;color:var(--text);font-family:'Barlow Condensed',sans-serif}
+.sc-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:11px;padding:17px;margin-bottom:13px}
+.card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.row-between{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;gap:8px;flex-wrap:wrap}
+.row-between h3{font-size:13px;font-weight:600;color:var(--text)}
+
+/* ── BTNS ── */
+.btn-p{background:var(--green);color:#0f1117;border:none;border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-weight:700;white-space:nowrap;transition:background .15s;font-family:'Barlow',sans-serif}
+.btn-p:hover{background:var(--green2)}
+.btn-g{background:none;border:1px solid var(--border2);border-radius:7px;padding:7px 14px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;font-family:'Barlow',sans-serif}
+.btn-g:hover{background:var(--bg2);color:var(--text)}
+.btn-lime{background:var(--lime);color:#0f1117;border:none;border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-weight:700;font-family:'Barlow',sans-serif}
+.btn-lime:hover{background:#9fd935}
+.btn-sm{padding:3px 8px;font-size:11px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-family:'Barlow',sans-serif;transition:all .1s}
+.btn-sm:hover{background:var(--bg2);color:var(--text)}
+.btn-sm.g{color:var(--green);border-color:var(--green3)}.btn-sm.g:hover{background:var(--greenbg)}
+.btn-sm.r{color:var(--red);border-color:#4a1f1f}.btn-sm.r:hover{background:var(--redbg)}
+.btn-sm.b{color:var(--blue);border-color:#1a3a5a}.btn-sm.b:hover{background:var(--bluebg)}
+.btn-sm.p{color:var(--purple);border-color:#3a2a6a}.btn-sm.p:hover{background:var(--purplebg)}
+.btn-sm.l{color:var(--lime);border-color:#3a5010}.btn-sm.l:hover{background:var(--limebg)}
+
+/* ── FORMS ── */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.frow.full{grid-template-columns:1fr}.frow.three{grid-template-columns:1fr 1fr 1fr}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+input,select,textarea{font-family:'Barlow',sans-serif;font-size:12px;color:var(--text);background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;width:100%;transition:border-color .15s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(232,160,32,.12)}
+select option{background:var(--bg2)}
+textarea{resize:vertical;min-height:64px}
+
+/* ── VEHICLE CARDS ── */
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:11px}
+.vcard{background:var(--bg1);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:border-color .15s}
+.vcard:hover{border-color:var(--border2)}
+.vimg{background:var(--bg2);height:110px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.vimg img{width:100%;height:100%;object-fit:cover}
+.vimg svg{width:44px;height:44px;opacity:.14;fill:var(--text)}
+.badge{position:absolute;top:7px;right:7px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
+.bd{background:var(--greenbg);color:var(--green);border:1px solid var(--green3)}
+.bv{background:var(--redbg);color:var(--red);border:1px solid #4a1f1f}
+.br{background:var(--amberbg);color:var(--amber);border:1px solid #4a3010}
+.vbadge-vis{position:absolute;top:7px;left:7px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--limebg);color:var(--lime);border:1px solid #3a5010}
+.vinfo{padding:11px 13px}
+.vname{font-size:13px;font-weight:800;color:var(--text);font-family:'Barlow Condensed',sans-serif}
+.vdetail{font-size:11px;color:var(--text2);margin-top:3px}
+.vprice{font-size:16px;font-weight:800;color:var(--green);margin-top:6px;font-family:'Barlow Condensed',sans-serif}
+.vseller{font-size:11px;color:var(--purple);margin-top:3px}
+.vactions{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}
+
+/* ── TIMELINE / DOCS ── */
+.tl{display:flex;flex-direction:column;gap:7px}
+.tl-item{display:flex;gap:10px;align-items:flex-start;padding:10px 13px;background:var(--bg2);border:1px solid var(--border);border-radius:9px}
+.dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.dot-g{background:var(--green)}.dot-a{background:var(--amber)}.dot-r{background:var(--red)}.dot-l{background:var(--lime)}
+.tl-name{font-size:12px;font-weight:600;color:var(--text)}
+.tl-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.tl-date{font-size:10px;color:var(--text3);margin-top:3px}
+.doc-list{display:flex;flex-direction:column;gap:6px}
+.doc-item{display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)}
+.ds{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.ds-ok{background:var(--greenbg);color:var(--green)}.ds-pend{background:var(--amberbg);color:var(--amber)}.ds-miss{background:var(--redbg);color:var(--red)}
+
+/* ── SELLERS ── */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:16px}
+.scard{background:var(--bg1);border:1px solid var(--border);border-radius:11px;padding:14px;transition:border-color .15s}
+.scard:hover{border-color:var(--border2)}
+.s-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0f1117;margin-bottom:9px}
+.s-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:9px}
+.s-stat{background:var(--bg2);border-radius:7px;padding:6px 8px;text-align:center}
+.s-stat-v{font-size:13px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif}
+.s-stat-l{font-size:9px;color:var(--text3);margin-top:1px}
+.com-badge{display:inline-flex;font-size:10px;padding:2px 8px;border-radius:20px;background:var(--purplebg);color:var(--purple);border:1px solid #3a2a6a;margin-top:5px;font-weight:600}
+.rank-item{display:flex;align-items:center;gap:9px;padding:9px 13px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;margin-bottom:6px}
+.rank-n{font-size:13px;font-weight:700;color:var(--text3);min-width:20px;text-align:center}
+.rank-n.gold{color:var(--amber)}.rank-n.silver{color:#8899b0}.rank-n.bronze{color:#cd7f32}
+.rank-av{width:29px;height:29px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0f1117;flex-shrink:0}
+
+/* ── USERS TABLE ── */
+.utbl{width:100%;border-collapse:collapse;font-size:12px}
+.utbl th{text-align:left;padding:7px 10px;font-weight:600;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap}
+.utbl td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+
+/* ── LINK BLOCKS ── */
+.link-block{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:8px}
+.plat-lbl{font-size:10px;font-weight:700;color:var(--text3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.06em}
+.link-row{display:flex;gap:6px}.link-row input{flex:1}
+.open-btn{background:var(--greenbg);color:var(--green);border:1px solid var(--green3);border-radius:7px;padding:6px 10px;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:700;font-family:'Barlow',sans-serif}
+.open-btn:hover{background:var(--green3)}
+
+/* ── VISTORIA IMPORT ── */
+.vis-import-box{background:var(--bg1);border:1.5px solid var(--lime);border-radius:12px;padding:18px;margin-bottom:16px}
+.vis-import-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--lime);margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.vis-import-sub{font-size:12px;color:var(--text2);margin-bottom:14px}
+.vis-code-area{width:100%;background:var(--bg0);border:1px solid var(--border2);border-radius:8px;padding:10px;font-size:12px;color:var(--text2);font-family:'Courier New',monospace;min-height:80px;resize:vertical;outline:none;transition:border-color .15s}
+.vis-code-area:focus{border-color:var(--lime)}
+.pending-list{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+.pending-item{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;gap:8px;flex-wrap:wrap}
+.pending-info{flex:1}
+.pending-name{font-size:13px;font-weight:600;color:var(--text)}
+.pending-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.pending-score{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.vis-score-good{background:var(--greenbg);color:var(--green)}
+.vis-score-mid{background:var(--amberbg);color:var(--amber)}
+.vis-score-bad{background:var(--redbg);color:var(--red)}
+
+/* ── MISC ── */
+.sel-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.sel-veh{font-size:12px;flex:1;min-width:160px}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3);font-size:13px}
+.rel-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rel-bar-lbl{font-size:12px;color:var(--text2);min-width:80px;white-space:nowrap}
+.rel-bar-track{flex:1;background:var(--bg3);border-radius:20px;height:6px;overflow:hidden}
+.rel-bar-fill{height:100%;border-radius:20px}
+.rel-bar-val{font-size:12px;font-weight:600;color:var(--text);min-width:20px;text-align:right}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.photo-thumb{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;display:none}
+.modal{background:var(--bg1);border-radius:13px;border:1px solid var(--border2);padding:22px;width:100%;max-width:500px;max-height:88vh;overflow-y:auto}
+.modal-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:15px;padding-bottom:11px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;font-family:'Barlow',sans-serif}
+.close-btn:hover{color:var(--text)}
+
+/* ── TOAST ── */
+.mono{font-family:"JetBrains Mono",monospace!important;font-size:11px;letter-spacing:.04em}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--green);color:#0f1117;padding:10px 17px;border-radius:9px;font-size:13px;font-weight:700;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;font-family:'Barlow',sans-serif}
+.toast.show{opacity:1}
+.no-access{text-align:center;padding:60px 20px}
+.tag-chip{display:inline-flex;font-size:10px;padding:2px 7px;border-radius:20px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ═══════════════════════════════════════════════════ -->
+<div id="login-wrap" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon"><svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM5 11l1.5-4.5h11L19 11H5z"/></svg></div>
+      <span class="login-brand" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;letter-spacing:-.01em">N2 <span style="color:var(--green)">AutoSYS</span></span>
+    </div>
+    <div class="login-heading">Bem-vindo de volta</div>
+    <div class="login-sub" style="font-family:'Barlow',sans-serif">Faça login para acessar o sistema</div>
+    <div class="login-err" id="login-err">Usuário ou senha incorretos.</div>
+    <div class="lf"><label class="ll">Usuário</label><input class="li" id="lu" placeholder="seu.usuario" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="lf"><label class="ll">Senha</label><input class="li" id="lp" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="login-btn" onclick="doLogin()" id="login-btn-el">Entrar no sistema</button>
+    <div class="login-hint" style="font-family:'Barlow',sans-serif">N2 AutoSYS — Sistemas para Controle Automotivo</div>
+  </div>
+</div>
+
+<!-- ══ APP ══════════════════════════════════════════════════════ -->
+<div id="app" class="app">
+  <div class="topbar" id="topbar">
+    <div class="logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM5 11l1.5-4.5h11L19 11H5z"/></svg></div>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;letter-spacing:-.01em">N2 <span style="color:var(--green)">AutoSYS</span></span>
+    </div>
+    <div class="nav" id="main-nav"></div>
+    <div class="user-area">
+      <div class="user-badge" onclick="showSec('perfil')">
+        <div class="user-avatar" id="tb-av"></div>
+        <div><div class="user-name" id="tb-name"></div><div class="role-tag" id="tb-role"></div></div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+  <div class="content" id="main-content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="mo" onclick="closeMO(event)">
+  <div class="modal"><div class="modal-title"><span id="mt"></span><button class="close-btn" onclick="closeMD()">×</button></div><div id="mb"></div></div>
+</div>
+
+<script>
+'use strict';
+// ══ STORAGE ═══════════════════════════════════════════════════
+const KV='ag4_v',KD='ag4_d',KVN='ag4_vn',KA='ag4_a',KF='ag4_f',KS='ag4_s',KU='ag4_u',KOR='ag4_orc',KSEG='ag4_seg';
+const load=k=>{try{const r=JSON.parse(localStorage.getItem(k));return Array.isArray(r)?r:[]}catch{return[]}};
+const save=(k,d)=>{try{localStorage.setItem(k,JSON.stringify(d))}catch{toast('Armazenamento cheio!','#e05252')}};
+const loadObj=(k,d={})=>{try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}};
+const saveObj=(k,d)=>localStorage.setItem(k,JSON.stringify(d));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const toast=(msg,col='#E8A020')=>{const t=document.getElementById('toast');t.textContent=msg;t.style.background=col;t.style.color=col==='#E8A020'?'#0f1117':'#fff';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2700)};
+const fmtR=v=>{if(!v)return'—';const n=parseFloat(String(v).replace(/\./g,'').replace(',','.'));return isNaN(n)?v:'R$ '+n.toLocaleString('pt-BR')};
+const parseR=v=>parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
+const statusLabel=s=>s==='disponivel'?'Disponível':'Vendido';
+const statusBadge=s=>s==='disponivel'?'bd':'bv';
+const initials=n=>(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+
+// ══ ROLES ══════════════════════════════════════════════════════
+const ROLES={
+  admin:    {label:'Administrador',color:'#E8A020',bg:'#2A1E05',nav:['estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','usuarios','perfil']},
+  gerente:  {label:'Gerente',      color:'#f5a623',bg:'#2a1f0a',nav:['estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','perfil']},
+  vendedor: {label:'Vendedor',     color:'#a78bfa',bg:'#1a1030',nav:['estoque','fotos','vendas','vistoria','anuncios','orcamentos','perfil']},
+  rh:       {label:'RH',           color:'#4a9eff',bg:'#0a1a2a',nav:['vendedores','usuarios','relatorio','perfil']},
+  financeiro:{label:'Financeiro',  color:'#e05252',bg:'#2a0f0f',nav:['vendas','orcamentos','relatorio','backup','perfil']},
+  visualizador:{label:'Visualizador',color:'#8899b0',bg:'#1e2535',nav:['estoque','relatorio','perfil']},
+};
+const NAV_LABELS={estoque:'Estoque',cadastro:'+ Veículo',fotos:'Fotos',documentos:'Documentos',vendas:'Vendas',vistoria:'⚡ Vistoria',vendedores:'Vendedores',anuncios:'Anúncios',orcamentos:'Orçamentos',seguradora:'Seguradora',relatorio:'Relatório',backup:'💾 Backup',usuarios:'Usuários',perfil:'Meu Perfil'};
+const NAV_ORDER=['estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','usuarios','perfil'];
+
+// ══ SESSION ════════════════════════════════════════════════════
+let CU=null;
+const getSess=()=>{try{return JSON.parse(sessionStorage.getItem('ag4_sess'))||null}catch{return null}};
+const setSess=u=>sessionStorage.setItem('ag4_sess',JSON.stringify(u));
+const clrSess=()=>sessionStorage.removeItem('ag4_sess');
+const can=sec=>{if(!CU)return false;return ROLES[CU.cargo]?.nav.includes(sec)};
+
+function getUsers(){
+  let users=load(KU);
+  if(!users.find(u=>u.username==='admin')){
+    users.unshift({id:'u0',username:'admin',password:'admin123',nome:'Administrador',cargo:'admin',email:'admin@empresa.com',criadoEm:new Date().toLocaleDateString('pt-BR')});
+    save(KU,users);
+  }
+  return users;
+}
+
+// ── URL do servidor N2 AutoSYS ────────────────────────────────────
+const API_URL='https://n2autosys-backend.onrender.com';
+
+// ── Detecta o tenant pelo subdomínio ou usa o padrão ─────────────
+function getTenantSlug(){
+  const host=window.location.hostname;
+  const parts=host.split('.');
+  if(parts.length>=3&&parts[0]!=='www')return parts[0];
+  // fallback: pega do localStorage (para uso local/testes)
+  localStorage.setItem('ag4_tenant','n2autosys_nickel'); return 'n2autosys_nickel';
+}
+
+async function doLogin(){
+  const u=document.getElementById('lu').value.trim();
+  const p=document.getElementById('lp').value;
+  if(!u||!p){const e=document.getElementById('login-err');e.textContent='Preencha usuário e senha.';e.style.display='block';setTimeout(()=>e.style.display='none',3000);return}
+
+  const btn=document.querySelector('.login-btn');
+  const origText=btn.textContent;
+  btn.textContent='⏳ Conectando...';btn.disabled=true;
+  btn.style.opacity='0.7';
+
+  // Mostra aviso de carregamento
+  const errEl2=document.getElementById('login-err');
+  errEl2.style.background='var(--greenbg)';
+  errEl2.style.borderColor='var(--green3)';
+  errEl2.style.color='var(--green)';
+  errEl2.textContent='Conectando ao servidor... (pode levar até 60s na primeira vez)';
+  errEl2.style.display='block';
+
+  try{
+    // Tenta login no servidor real
+    const resp=await fetch(API_URL+'/api/auth/login',{
+      mode:'cors',
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Tenant-Slug':getTenantSlug()},
+      body:JSON.stringify({username:u,password:p})
+    });
+
+    if(resp.ok){
+      const data=await resp.json();
+      // Salva token e dados do servidor
+      const serverUser={
+        id:data.user.id,
+        username:data.user.username,
+        nome:data.user.nome,
+        email:data.user.email||'',
+        cargo:data.user.cargo,
+        telefone:data.user.telefone||'',
+        fromServer:true,
+        token:data.token,
+        empresaId:data.empresa?.id,
+        empresaNome:data.empresa?.nome,
+      };
+      localStorage.setItem('ag4_jwt',data.token);
+      localStorage.setItem('ag4_tenant',getTenantSlug());
+      CU=serverUser;setSess(serverUser);
+      document.getElementById('login-wrap').style.display='none';
+      document.getElementById('app').style.display='flex';
+      initApp();
+      return;
+    }
+
+    // Servidor retornou erro (credenciais inválidas)
+    const err=await resp.json();
+    const errEl=document.getElementById('login-err');
+    errEl.textContent=err.error||'Usuário ou senha incorretos.';
+    errEl.style.display='block';
+    setTimeout(()=>errEl.style.display='none',3000);
+
+  }catch(networkErr){
+    // Servidor offline — tenta login local (fallback)
+    console.warn('Servidor indisponível, usando login local:', networkErr.message);
+    const user=getUsers().find(x=>x.username===u&&x.password===p);
+    if(!user){
+      const errEl=document.getElementById('login-err');
+      errEl.textContent='Usuário ou senha incorretos.';
+      errEl.style.display='block';
+      setTimeout(()=>errEl.style.display='none',3000);
+    }else{
+      CU=user;setSess(user);
+      document.getElementById('login-wrap').style.display='none';
+      document.getElementById('app').style.display='flex';
+      initApp();
+      toast('⚠️ Modo offline — servidor indisponível','#f5a623');
+    }
+  }finally{
+    btn.textContent=origText;
+    btn.disabled=false;
+    btn.style.opacity='1';
+    // Reseta estilo do aviso
+    const errReset=document.getElementById('login-err');
+    errReset.style.background='';
+    errReset.style.borderColor='';
+    errReset.style.color='';
+    if(errReset.textContent.includes('Conectando'))errReset.style.display='none';
+  }
+}
+
+function doLogout(){
+  clrSess();CU=null;
+  localStorage.removeItem('ag4_jwt');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-wrap').style.display='flex';
+  document.getElementById('lu').value='';document.getElementById('lp').value='';
+}
+
+// ── Requisição autenticada ao servidor ────────────────────────────
+async function apiRequest(method,path,body){
+  const token=localStorage.getItem('ag4_jwt')||CU?.token;
+  const tenant=getTenantSlug();
+  const opts={
+    method,
+    headers:{
+      'Content-Type':'application/json',
+      'X-Tenant-Slug':tenant,
+      ...(token?{'Authorization':'Bearer '+token}:{})
+    },
+  };
+  if(body&&method!=='GET')opts.body=JSON.stringify(body);
+  const resp=await fetch(API_URL+path,opts);
+  if(resp.status===401){toast('Sessão expirada — faça login novamente','#e05252');doLogout();return null;}
+  return resp.json();
+}
+
+function initApp(){
+  const role=ROLES[CU.cargo]||ROLES.visualizador;
+  // Mostra badge de empresa no topo se veio do servidor
+  if(CU.fromServer&&CU.empresaNome){
+    setTimeout(()=>{
+      const topbar=document.getElementById('topbar');
+      if(topbar&&!document.getElementById('empresa-badge')){
+        const badge=document.createElement('div');
+        badge.id='empresa-badge';
+        badge.style.cssText='font-size:10px;font-weight:600;color:var(--green);background:var(--greenbg);border:1px solid var(--green3);border-radius:20px;padding:2px 10px;white-space:nowrap';
+        badge.textContent='🏢 '+CU.empresaNome;
+        topbar.insertBefore(badge,topbar.querySelector('.user-area'));
+      }
+    },100);
+  }
+  const av=document.getElementById('tb-av');
+  av.textContent=initials(CU.nome);av.style.background=role.color;
+  document.getElementById('tb-name').textContent=CU.nome;
+  const rb=document.getElementById('tb-role');rb.textContent=role.label;rb.style.background=role.bg;rb.style.color=role.color;
+  const nav=document.getElementById('main-nav');nav.innerHTML='';
+  NAV_ORDER.filter(s=>can(s)).forEach(s=>{
+    const b=document.createElement('button');
+    b.className='nb'+(s==='vistoria'?' highlight':'');
+    b.textContent=NAV_LABELS[s];b.onclick=()=>showSec(s);nav.appendChild(b);
+  });
+  const first=NAV_ORDER.find(s=>can(s))||'perfil';
+  showSec(first);
+}
+
+function showSec(id){
+  if(!can(id)){document.getElementById('main-content').innerHTML='<div class="no-access"><div style="font-size:40px;margin-bottom:12px">🔒</div><div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">Acesso restrito</div><div style="font-size:13px;color:var(--text3)">Você não tem permissão para este módulo.</div></div>';return}
+  document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('active',b.textContent===NAV_LABELS[id]));
+  const c=document.getElementById('main-content');c.innerHTML='';
+  const sec=document.createElement('div');sec.id='sec-'+id;sec.className='sec active';c.appendChild(sec);
+  RENDERS[id]&&RENDERS[id](sec);
+}
+
+// ══ HELPERS ════════════════════════════════════════════════════
+const getFotoCapa=vid=>{const fs=load(KF).filter(f=>f.veiculoId===vid);return fs.length?fs[0].data:null};
+const getSellerName=sid=>{if(!sid)return null;const s=load(KS).find(x=>x.id===sid);return s?s.nome:null};
+const calcCom=(venda,seller)=>{if(!seller)return 0;return parseR(venda.valor)*(parseFloat(seller.comissao||0)/100)};
+const roleTag=cargo=>{const r=ROLES[cargo]||ROLES.visualizador;return`<span class="role-tag" style="background:${r.bg};color:${r.color}">${r.label}</span>`};
+const avDiv=(nome,cargo,sz=30,fs=11)=>{const r=ROLES[cargo]||ROLES.visualizador;return`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${r.color};display:flex;align-items:center;justify-content:center;font-size:${fs}px;font-weight:700;color:#0f1117;flex-shrink:0">${initials(nome)}</div>`};
+const openModal=(title,body)=>{document.getElementById('mt').textContent=title;document.getElementById('mb').innerHTML=body;document.getElementById('mo').style.display='flex'};
+const closeMO=e=>{if(e.target===document.getElementById('mo'))closeMD()};
+const closeMD=()=>{document.getElementById('mo').style.display='none'};
+
+// ══ ESTOQUE ════════════════════════════════════════════════════
+async function renderEstoque(sec){
+  // Tenta buscar do servidor, fallback para localStorage
+  if(CU?.fromServer){
+    try{
+      const data=await apiRequest('GET','/api/veiculos');
+      if(data?.veiculos){save(KV,data.veiculos);}
+      const sdata=await apiRequest('GET','/api/vendedores');
+      if(sdata?.vendedores){save(KS,sdata.vendedores);}
+      const vdata=await apiRequest('GET','/api/vendas');
+      if(vdata?.vendas){save(KVN,vdata.vendas);}
+    }catch(e){console.warn('Usando cache local:',e.message);}
+  }
+  const v=load(KV),vns=load(KVN),sellers=load(KS);
+  const disp=v.filter(x=>x.status==='disponivel').length,vend2=v.filter(x=>x.status==='vendido').length;
+  const totalVal=vns.reduce((a,x)=>a+parseR(x.valor),0);
+  const pending=JSON.parse(localStorage.getItem('ag3_pending_vistorias')||'[]');
+  sec.innerHTML=`
+  <div class="stats">
+    <div class="sc"><div class="sc-lbl">Cadastrados</div><div class="sc-val">${v.length}</div><div class="sc-sub">veículos</div></div>
+    <div class="sc"><div class="sc-lbl">Disponíveis</div><div class="sc-val" style="color:var(--green)">${disp}</div></div>
+    <div class="sc"><div class="sc-lbl">Vendidos</div><div class="sc-val">${vend2}</div></div>
+    <div class="sc"><div class="sc-lbl">Faturado</div><div class="sc-val" style="font-size:16px;color:var(--green)">R$${totalVal.toLocaleString('pt-BR')}</div><div class="sc-sub">${vns.length} venda(s)</div></div>
+  </div>
+  ${pending.length>0?`<div style="background:var(--limebg);border:1px solid #3a5010;border-radius:10px;padding:12px 15px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div><div style="font-size:12px;font-weight:700;color:var(--lime)">⚡ ${pending.length} vistoria(s) aguardando importação</div><div style="font-size:11px;color:#7a9a30;margin-top:2px">Clique em "⚡ Vistoria" para importar</div></div>
+    <button class="btn-lime" onclick="showSec('vistoria')">Importar agora →</button>
+  </div>`:''}
+  <div class="row-between">
+    <h3>Veículos em estoque</h3>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <input id="est-s" placeholder="Buscar..." style="width:150px;font-size:12px;padding:6px 9px" oninput="filterEst()"/>
+      <select id="est-st" style="font-size:12px;padding:6px 9px" onchange="filterEst()"><option value="">Todos status</option><option value="disponivel">Disponível</option><option value="vendido">Vendido</option></select>
+      ${can('cadastro')?`<button class="btn-p" onclick="showSec('cadastro')">+ Veículo</button>`:''}
+    </div>
+  </div>
+  <div class="vgrid" id="est-grid"></div>`;
+  filterEst();
+}
+
+function filterEst(){
+  const q=(document.getElementById('est-s')?.value||'').toLowerCase();
+  const fs=document.getElementById('est-st')?.value||'';
+  const veiculos=load(KV).filter(v=>{
+    const m=!q||(v.marca+v.modelo+(v.placa||'')+(v.cor||'')).toLowerCase().includes(q);
+    return m&&(!fs||v.status===fs);
+  });
+  const grid=document.getElementById('est-grid');if(!grid)return;
+  const isTk=t=>t==='Caminhão'||t==='Van'||t==='Implemento';
+  if(!veiculos.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">Nenhum veículo encontrado.<br/>Clique em "+ Veículo" para cadastrar.</div>';return}
+  grid.innerHTML=veiculos.map(v=>{
+    const capa=getFotoCapa(v.id);
+    const img=capa?`<img src="${capa}" alt=""/>`:`<svg viewBox="0 0 24 24">${isTk(v.tipo)?'<path d="M20 8h-3L14 4H9L6 8H3C2 8 1 9 1 10v9h1c0 1.1.9 2 2 2s2-.9 2-2h8c0 1.1.9 2 2 2s2-.9 2-2h1V10c0-1-1-2-2-2zm-9-2h2l2 2H9l2-2zm-7 4h16v3H4v-3z"/>':'<path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM5 11l1.5-4.5h11L19 11H5z"/>'}</svg>`;
+    const seller=v.vendedorId?getSellerName(v.vendedorId):null;
+    const acts=[
+      can('cadastro')?`<button class="btn-sm" onclick="editVeh('${v.id}')">Editar</button>`:'',
+      can('vendedores')?`<button class="btn-sm p" onclick="atribuirV('${v.id}')">Vendedor</button>`:'',
+      can('fotos')?`<button class="btn-sm" onclick="irFotos('${v.id}')">Fotos</button>`:'',
+      can('documentos')?`<button class="btn-sm" onclick="irDocs('${v.id}')">Docs</button>`:'',
+      can('vendas')?`<button class="btn-sm g" onclick="irVenda('${v.id}')">Venda</button>`:'',
+      can('anuncios')?`<button class="btn-sm b" onclick="irAnuncio('${v.id}')">Anúncio</button>`:'',
+      can('vendas')?`<button class="btn-sm b" onclick="gerarContrato('${v.id}')">Contrato</button>`:'',
+      (can('admin')||can('gerente'))?`<button class="btn-sm r" onclick="excluirVeh('${v.id}')">×</button>`:''
+    ].filter(Boolean).join('');
+    return`<div class="vcard">
+      <div class="vimg">${img}
+        <span class="badge ${statusBadge(v.status)}">${statusLabel(v.status)}</span>
+        ${v.fromVistoria?'<span class="vbadge-vis">⚡ Vistoria</span>':''}
+      </div>
+      <div class="vinfo">
+        <div class="vname">${v.marca} ${v.modelo} ${v.ano}</div>
+        <div class="vdetail">${v.avaria||''}${v.km?' · '+v.km+' km':''}${v.cor?' · '+v.cor:''}</div>
+        <div class="vprice">${fmtR(v.valorVenda)}</div>
+        ${seller?`<div class="vseller">👤 ${seller}</div>`:''}
+        <div class="vactions">${acts}</div>
+      </div></div>`;
+  }).join('');
+}
+
+async function excluirVeh(id){
+  if(!confirm('Excluir este veículo?'))return;
+  if(CU?.fromServer){
+    try{
+      await apiRequest('DELETE','/api/veiculos/'+id);
+    }catch(e){console.warn('Erro ao excluir no servidor:',e.message);}
+  }
+  save(KV,load(KV).filter(x=>x.id!==id));
+  save(KF,load(KF).filter(f=>f.veiculoId!==id));
+  toast('Veículo excluído');filterEst();
+}
+function irFotos(id){showSec('fotos');setTimeout(()=>{const s=document.getElementById('fvs');if(s){s.value=id;loadFotosVeh(id)}},80)}
+function irDocs(id){showSec('documentos');setTimeout(()=>{const s=document.getElementById('dvs');if(s){s.value=id;loadDocsVeh(id)}},80)}
+function irVenda(id){showSec('vendas');setTimeout(()=>{const s=document.getElementById('vvs');if(s){s.value=id;loadVendaForm(id)}},80)}
+function irAnuncio(id){showSec('anuncios');setTimeout(()=>{const s=document.getElementById('avs');if(s){s.value=id;loadAnunciosVeh(id)}},80)}
+
+// ══ VISTORIA IMPORT ════════════════════════════════════════════
+function renderVistoria(sec){
+  const pending=JSON.parse(localStorage.getItem('ag3_pending_vistorias')||'[]');
+  sec.innerHTML=`
+  <div style="margin-bottom:16px">
+    <h3 style="font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif;margin-bottom:4px">⚡ Importar Vistoria</h3>
+    <p style="font-size:13px;color:var(--text2)">Importe dados do app VistoriaApp para cadastrar um veículo automaticamente.</p>
+  </div>
+
+  <div class="vis-import-box">
+    <div class="vis-import-title">📋 Colar código de importação</div>
+    <div class="vis-import-sub">Cole aqui o código gerado pelo VistoriaApp no celular do vistoriador.</div>
+    <textarea class="vis-code-area" id="vis-code-input" placeholder="Cole o código de importação aqui..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn-lime" onclick="importarCodigo()" style="padding:9px 18px;font-size:13px">⚡ Importar código</button>
+      <button class="btn-g" onclick="document.getElementById('vis-code-input').value=''">Limpar</button>
+    </div>
+  </div>
+
+  ${pending.length>0?`
+  <div class="card">
+    <div class="card-title">
+      <span>Vistorias pendentes no dispositivo <span style="font-size:11px;font-weight:400;color:var(--text3)">${pending.length} vistoria(s)</span></span>
+      <button class="btn-sm r" onclick="limparPending()">Limpar todas</button>
+    </div>
+    <div class="pending-list" id="pending-list">
+      ${pending.map((p,i)=>`
+      <div class="pending-item">
+        <div class="pending-info">
+          <div class="pending-name">${p.marca} ${p.modelo} ${p.ano} ${p.placa?'· '+p.placa:''}</div>
+          <div class="pending-meta">Vistoriador: ${p.vistoriador||'—'} · ${p.data||'—'} ${p.hora||''} · ${p.checkOk||0} OK / ${p.checkNok||0} NOK</div>
+        </div>
+        <span class="pending-score ${(p.score||0)>=70?'vis-score-good':(p.score||0)>=40?'vis-score-mid':'vis-score-bad'}">${p.score||0} pts</span>
+        <div style="display:flex;gap:5px">
+          <button class="btn-sm l" onclick="importarPending(${i})">Importar</button>
+          <button class="btn-sm" onclick="verDetalhesPending(${i})">Ver detalhes</button>
+          <button class="btn-sm r" onclick="removerPending(${i})">×</button>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`:
+  `<div class="card"><div style="text-align:center;padding:28px;color:var(--text3);font-size:13px">
+    <div style="font-size:32px;margin-bottom:10px">📱</div>
+    Nenhuma vistoria pendente neste dispositivo.<br/>
+    <span style="font-size:12px">Vistorias do VistoriaApp aparecem aqui automaticamente quando feitas no mesmo navegador.</span>
+  </div></div>`}
+
+  <div class="card">
+    <div class="card-title">Como funciona a integração</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:var(--bg2);border-radius:9px;border:1px solid var(--border)">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--limebg);border:1px solid #3a5010;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--lime);flex-shrink:0">1</div>
+        <div><div style="font-size:12px;font-weight:600;color:var(--text)">Vistoriador abre o VistoriaApp no celular</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Faz login com usuário próprio e preenche o checklist, fotos e danos</div></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:var(--bg2);border-radius:9px;border:1px solid var(--border)">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--limebg);border:1px solid #3a5010;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--lime);flex-shrink:0">2</div>
+        <div><div style="font-size:12px;font-weight:600;color:var(--text)">Sistema gera um código de importação</div><div style="font-size:11px;color:var(--text2);margin-top:2px">O vistoriador copia o código e envia por WhatsApp, e-mail ou mostra na tela</div></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:var(--bg2);border-radius:9px;border:1px solid var(--border)">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--limebg);border:1px solid #3a5010;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--lime);flex-shrink:0">3</div>
+        <div><div style="font-size:12px;font-weight:600;color:var(--text)">Gerente cola aqui e confirma</div><div style="font-size:11px;color:var(--text2);margin-top:2px">O veículo é cadastrado automaticamente com todos os dados da vistoria</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function importarCodigo(){
+  const code=document.getElementById('vis-code-input')?.value.trim();
+  if(!code){toast('Cole o código primeiro','#e05252');return}
+  try{
+    const json=JSON.parse(decodeURIComponent(escape(atob(code))));
+    if(!json.marca||!json.modelo){toast('Código inválido ou corrompido','#e05252');return}
+    confirmarImport(json);
+  }catch(e){toast('Código inválido — verifique se copiou corretamente','#e05252')}
+}
+
+function importarPending(idx){
+  const pending=JSON.parse(localStorage.getItem('ag3_pending_vistorias')||'[]');
+  const p=pending[idx];if(!p)return;
+  confirmarImport(p);
+}
+
+function confirmarImport(data){
+  const sellers=load(KS);
+  const selOpts=sellers.map(s=>`<option value="${s.id}">${s.nome} (${s.comissao||0}%)</option>`).join('');
+  openModal('Confirmar importação de vistoria',`
+    <div style="background:var(--bg2);border-radius:9px;padding:12px 14px;margin-bottom:14px;border:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">${data.marca} ${data.modelo} ${data.ano} ${data.placa?'· '+data.placa:''}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;color:var(--text2)">
+        <div>Avaria: <b style="color:var(--text)">${data.avaria||'—'}</b></div>
+        <div>Nível: <b style="color:var(--text)">${data.dano||'—'}</b></div>
+        <div>Km: <b style="color:var(--text)">${data.km||'—'}</b></div>
+        <div>Cor: <b style="color:var(--text)">${data.cor||'—'}</b></div>
+        <div>Vistoriador: <b style="color:var(--lime)">${data.vistoriador||'—'}</b></div>
+        <div>Pontuação: <b style="color:var(--text)">${data.score||0} pts</b></div>
+        <div>Itens OK: <b style="color:var(--green)">${data.checkOk||0}</b></div>
+        <div>Itens NOK: <b style="color:var(--red)">${data.checkNok||0}</b></div>
+      </div>
+      ${(data.damages&&data.damages.length)?`<div style="margin-top:8px;font-size:11px;color:var(--text2)">Danos: ${data.damages.map(d=>`<span class="tag-chip">${d.label}: ${d.sev}</span>`).join(' ')}</div>`:''}
+      ${data.descAvaria?`<div style="margin-top:8px;font-size:11px;color:var(--text2);line-height:1.5"><b>Descrição:</b> ${data.descAvaria}</div>`:''}
+    </div>
+    <div class="frow" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">Valor de compra (R$)</div><input id="imp-compra" value="${data.valorCompra||''}" placeholder="45.000"/></div>
+      <div class="fg"><div class="fl">Valor de venda (R$)</div><input id="imp-venda" value="${data.valorVenda||''}" placeholder="58.000"/></div>
+    </div>
+    <div class="frow" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">Status</div><select id="imp-status"><option value="disponivel">Disponível</option><option value="vendido">Vendido</option></select></div>
+      <div class="fg"><div class="fl">Vendedor responsável</div><select id="imp-seller"><option value="">Sem vendedor</option>${selOpts}</select></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn-lime" style="flex:1;padding:10px" onclick="confirmarImportFinal('${btoa(unescape(encodeURIComponent(JSON.stringify(data))))}')">✓ Confirmar e cadastrar</button>
+      <button class="btn-g" onclick="closeMD()">Cancelar</button>
+    </div>`);
+}
+
+function confirmarImportFinal(encodedData){
+  try{
+    const data=JSON.parse(decodeURIComponent(escape(atob(encodedData))));
+    const vid=uid();
+    const v={
+      id:vid,tipo:data.tipo||'Automóvel',marca:data.marca,modelo:data.modelo,ano:data.ano,
+      cor:data.cor||'',placa:data.placa||'',km:data.km||'',chassi:data.chassi||'',
+      local:data.local||'',avaria:data.avaria||'Outros danos',dano:data.dano||'Moderado',
+      descAvaria:(data.descAvaria||'')+(data.recomendacoes?'\n\nRecomendações: '+data.recomendacoes:''),
+      valorCompra:document.getElementById('imp-compra')?.value.trim()||'',
+      valorVenda:document.getElementById('imp-venda')?.value.trim()||'',
+      status:document.getElementById('imp-status')?.value||'disponivel',
+      vendedorId:document.getElementById('imp-seller')?.value||null,
+      obs:`Vistoria: ${data.id||'—'} · Vistoriador: ${data.vistoriador||'—'} · Score: ${data.score||0}pts · ${data.checkOk||0} OK / ${data.checkNok||0} NOK`,
+      fromVistoria:true,vistoriaId:data.id||'',vistoriador:data.vistoriador||'',
+      vistoriaScore:data.score||0,criadoEm:new Date().toLocaleDateString('pt-BR'),
+    };
+    const lista=load(KV);lista.unshift(v);save(KV,lista);
+    // Remove from pending if present
+    try{
+      const pending=JSON.parse(localStorage.getItem('ag3_pending_vistorias')||'[]');
+      const filtered=pending.filter(p=>p.id!==data.id);
+      localStorage.setItem('ag3_pending_vistorias',JSON.stringify(filtered));
+    }catch{}
+    closeMD();
+    toast('Veículo importado com sucesso! ⚡');
+    showSec('estoque');
+  }catch(e){toast('Erro ao importar: '+e.message,'#e05252')}
+}
+
+function verDetalhesPending(idx){
+  const pending=JSON.parse(localStorage.getItem('ag3_pending_vistorias')||'[]');
+  const p=pending[idx];if(!p)return;
+  openModal('Detalhes da vistoria — '+p.marca+' '+p.modelo,`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      ${[['Vistoriador',p.vistoriador||'—'],['Data/Hora',(p.data||'—')+' '+( p.hora||'')],['Score',p.score+'pts'],['Fotos',p.photoCount||0],['Itens OK',p.checkOk||0],['Itens NOK',p.checkNok||0]].map(([l,v])=>`
+      <div style="background:var(--bg2);border-radius:8px;padding:9px 11px;border:1px solid var(--border)">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">${l}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${v}</div>
+      </div>`).join('')}
+    </div>
+    ${p.damages&&p.damages.length?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">Danos mapeados:</div><div style="display:flex;flex-direction:column;gap:5px">${p.damages.map(d=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)"><div style="width:8px;height:8px;border-radius:50%;background:${d.sev==='Leve'?'#ffb830':d.sev==='Moderado'?'#ff8040':'#e05252'};flex-shrink:0"></div><span style="font-size:12px;color:var(--text);flex:1">${d.label}</span><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--bg3);color:var(--text2)">${d.sev}</span>${d.desc?`<span style="font-size:11px;color:var(--text3)">${d.desc}</span>`:''}</div>`).join('')}</div></div>`:''}
+    ${p.descAvaria?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Descrição dos danos:</div><div style="font-size:12px;color:var(--text2);background:var(--bg2);padding:10px;border-radius:8px;line-height:1.5">${p.descAvaria}</div></div>`:''}
+    ${p.itensNok&&p.itensNok.length?`<div><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">Itens NOK detalhados:</div><div style="display:flex;flex-direction:column;gap:4px">${p.itensNok.slice(0,8).map(i=>`<div style="padding:6px 10px;background:var(--bg2);border-radius:8px;border:1px solid var(--border);font-size:11px"><b style="color:var(--red)">${(i.item||'').replace(/_/g,' ')}</b>${i.sev?' · '+i.sev:''} ${i.desc?'— '+i.desc:''}</div>`).join('')}</div></div>`:''}
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn-lime" style="flex:1;padding:10px" onclick="closeMD();importarPending(${idx})">⚡ Importar esta vistoria</button>
+      <button class="btn-g" onclick="closeMD()">Fechar</button>
+    </div>`);
+}
+
+function removerPending(idx){
+  if(!confirm('Remover esta vistoria pendente?'))return;
+  const pending=JSON.parse(localStorage.getItem('ag3_pending_vistorias')||'[]');
+  pending.splice(idx,1);localStorage.setItem('ag3_pending_vistorias',JSON.stringify(pending));
+  toast('Removido');showSec('vistoria');
+}
+
+function limparPending(){
+  if(!confirm('Limpar todas as vistorias pendentes?'))return;
+  localStorage.removeItem('ag3_pending_vistorias');toast('Pendências limpas');showSec('vistoria');
+}
+
+// ══ CADASTRO ══════════════════════════════════════════════════
+function renderCadastro(sec){
+  sec.innerHTML=`<div class="card">
+    <div class="card-title"><span id="form-title">Cadastrar novo veículo</span></div>
+    <input type="hidden" id="edit-id"/>
+    <div class="frow"><div class="fg"><div class="fl">Tipo *</div><select id="f-tipo"><option>Automóvel</option><option>Caminhão</option><option>Moto</option><option>Van</option><option>Implemento</option></select></div>
+    <div class="fg"><div class="fl">Marca *</div><input id="f-marca" placeholder="Fiat, VW..."/></div></div>
+    <div class="frow"><div class="fg"><div class="fl">Modelo *</div><input id="f-modelo" placeholder="Strada, Gol..."/></div>
+    <div class="fg"><div class="fl">Ano *</div><input id="f-ano" type="number" placeholder="2020"/></div></div>
+    <div class="frow three"><div class="fg"><div class="fl">Cor</div><input id="f-cor" placeholder="Branca"/></div>
+    <div class="fg"><div class="fl">Placa</div><input id="f-placa" placeholder="ABC-1234"/></div>
+    <div class="fg"><div class="fl">Km</div><input id="f-km" placeholder="87.000"/></div></div>
+    <div class="frow"><div class="fg"><div class="fl">Chassi</div><input id="f-chassi" placeholder="9BW..."/></div>
+    <div class="fg"><div class="fl">Local no pátio</div><input id="f-local" placeholder="Pátio 1 / Vaga 12"/></div></div>
+    <div class="frow"><div class="fg"><div class="fl">Tipo de avaria</div><select id="f-avaria"><option>Colisão frontal</option><option>Colisão traseira</option><option>Colisão lateral</option><option>Capotamento</option><option>Alagamento</option><option>Incêndio</option><option>Outros danos</option></select></div>
+    <div class="fg"><div class="fl">Nível de dano</div><select id="f-dano"><option>Pequena Monta</option><option>Média Monta</option><option>Grande Monta</option></select></div></div>
+    <div class="frow full"><div class="fg"><div class="fl">Descrição da avaria</div><textarea id="f-descavaria" placeholder="Peças comprometidas, condição do motor..."></textarea></div></div>
+    <div class="frow three"><div class="fg"><div class="fl">Valor compra (R$)</div><input id="f-compra" placeholder="45.000"/></div>
+    <div class="fg"><div class="fl">Valor venda (R$)</div><input id="f-venda" placeholder="58.000"/></div>
+    <div class="fg"><div class="fl">Status</div><select id="f-status"><option value="disponivel">Disponível</option><option value="vendido">Vendido</option></select></div></div>
+    <div class="frow full"><div class="fg"><div class="fl">Observações</div><textarea id="f-obs" placeholder="Outras informações..."></textarea></div></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn-p" onclick="salvarVeh()">Salvar veículo</button>
+      <button class="btn-g" onclick="showSec('estoque')">Cancelar</button>
+    </div>
+  </div>`;
+}
+
+async function salvarVeh(){
+  const editId=document.getElementById('edit-id').value;
+  const v={tipo:document.getElementById('f-tipo').value,marca:document.getElementById('f-marca').value.trim(),
+    modelo:document.getElementById('f-modelo').value.trim(),ano:document.getElementById('f-ano').value,
+    cor:document.getElementById('f-cor').value.trim(),placa:document.getElementById('f-placa').value.trim().toUpperCase(),
+    km:document.getElementById('f-km').value.trim(),chassi:document.getElementById('f-chassi').value.trim(),
+    local_patio:document.getElementById('f-local').value.trim(),avaria:document.getElementById('f-avaria').value,
+    nivel_dano:document.getElementById('f-dano').value,desc_avaria:document.getElementById('f-descavaria').value.trim(),
+    valor_compra:document.getElementById('f-compra').value.trim(),valor_venda:document.getElementById('f-venda').value.trim(),
+    status:document.getElementById('f-status').value,obs:document.getElementById('f-obs').value.trim()};
+  if(!v.marca||!v.modelo||!v.ano){toast('Preencha marca, modelo e ano','#e05252');return}
+
+  if(CU?.fromServer){
+    try{
+      const resp=editId
+        ? await apiRequest('PUT','/api/veiculos/'+editId,v)
+        : await apiRequest('POST','/api/veiculos',v);
+      if(resp?.veiculo){
+        // Atualiza cache local
+        const lista=load(KV);
+        const idx=lista.findIndex(x=>x.id===resp.veiculo.id);
+        if(idx>=0)lista[idx]=resp.veiculo;else lista.unshift(resp.veiculo);
+        save(KV,lista);
+        toast('Veículo salvo!');showSec('estoque');return;
+      }
+      toast(resp?.error||'Erro ao salvar','#e05252');return;
+    }catch(e){toast('Erro de conexão — salvando localmente','#f5a623');}
+  }
+  // Fallback local
+  const id=editId||uid();
+  v.id=id;v.criadoEm=new Date().toLocaleDateString('pt-BR');
+  const lista=load(KV);const idx=lista.findIndex(x=>x.id===id);
+  const old=idx>=0?lista[idx]:null;if(old)v.vendedorId=old.vendedorId||null;
+  if(idx>=0)lista[idx]=v;else lista.unshift(v);save(KV,lista);
+  toast('Veículo salvo!');showSec('estoque');
+}
+
+function editVeh(id){
+  const v=load(KV).find(x=>x.id===id);if(!v)return;showSec('cadastro');
+  setTimeout(()=>{
+    document.getElementById('edit-id').value=v.id;
+    document.getElementById('form-title').textContent='Editando — '+v.marca+' '+v.modelo;
+    document.getElementById('f-tipo').value=v.tipo||'Automóvel';
+    document.getElementById('f-marca').value=v.marca||'';
+    document.getElementById('f-modelo').value=v.modelo||'';
+    document.getElementById('f-ano').value=v.ano||'';
+    document.getElementById('f-cor').value=v.cor||'';
+    document.getElementById('f-placa').value=v.placa||'';
+    document.getElementById('f-km').value=v.km||'';
+    document.getElementById('f-chassi').value=v.chassi||'';
+    document.getElementById('f-local').value=v.local||'';
+    document.getElementById('f-avaria').value=v.avaria||'Colisão frontal';
+    document.getElementById('f-dano').value=v.dano||'Pequena Monta';
+    document.getElementById('f-descavaria').value=v.descAvaria||'';
+    document.getElementById('f-compra').value=v.valorCompra||'';
+    document.getElementById('f-venda').value=v.valorVenda||'';
+    document.getElementById('f-status').value=v.status||'disponivel';
+    document.getElementById('f-obs').value=v.obs||'';
+  },60);
+}
+
+// ══ FOTOS ═════════════════════════════════════════════════════
+function renderFotos(sec){
+  const vs=load(KV);
+  sec.innerHTML=`<div class="sel-row">
+    <select class="sel-veh" id="fvs" onchange="loadFotosVeh(this.value)">
+      <option value="">— Selecione um veículo —</option>
+      ${vs.map(v=>`<option value="${v.id}">${v.marca} ${v.modelo} ${v.ano}${v.placa?' — '+v.placa:''}</option>`).join('')}
+    </select>
+    <label class="btn-p" style="cursor:pointer">+ Foto<input type="file" id="foto-inp" accept="image/*" multiple style="display:none" onchange="uploadFotos()"/></label>
+  </div><div id="foto-area"><div class="empty-state">Selecione um veículo para ver as fotos</div></div>`;
+}
+function loadFotosVeh(vid){
+  const sel=document.getElementById('fvs');if(sel&&vid)sel.value=vid;
+  const area=document.getElementById('foto-area');if(!area||!vid)return;
+  const fotos=load(KF).filter(f=>f.veiculoId===vid);
+  area.innerHTML=`<div class="card"><div class="card-title">Fotos <span style="font-size:11px;font-weight:400;color:var(--text3)">${fotos.length} foto(s)</span></div>
+    <div class="photo-grid">${fotos.map(f=>`<div style="position:relative"><img src="${f.data}" class="photo-thumb" onclick="verFoto('${f.id}')"/><button style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;border-radius:4px;color:white;font-size:11px;cursor:pointer;padding:2px 6px" onclick="excluirFoto('${f.id}','${vid}')">×</button></div>`).join('')}</div>
+    <p style="font-size:11px;color:var(--text3);margin-top:8px">A primeira foto é usada como capa no estoque.</p></div>`;
+}
+function uploadFotos(){
+  const inp=document.getElementById('foto-inp');const vid=document.getElementById('fvs')?.value;
+  if(!vid){toast('Selecione um veículo','#e05252');return}
+  Array.from(inp.files).forEach(f=>{
+    const r=new FileReader();r.onload=e=>{
+      try{const lista=load(KF);lista.push({id:uid(),veiculoId:vid,data:e.target.result,nome:f.name});save(KF,lista);loadFotosVeh(vid);toast('Foto salva!')}
+      catch{toast('Foto muito grande','#e05252')}
+    };r.readAsDataURL(f);
+  });inp.value='';
+}
+function verFoto(id){const f=load(KF).find(x=>x.id===id);if(!f)return;openModal(f.nome||'Foto',`<img src="${f.data}" style="width:100%;border-radius:8px;border:1px solid var(--border)"/>`)}
+function excluirFoto(id,vid){if(!confirm('Remover?'))return;save(KF,load(KF).filter(f=>f.id!==id));toast('Foto removida');loadFotosVeh(vid)}
+
+// ══ DOCUMENTOS ════════════════════════════════════════════════
+const DOCS_PAD=['CRV (Certificado de Registro)','CRLV (Licenciamento)','Laudo de vistoria','Nota fiscal de compra','Laudo cautelar','Termo de responsabilidade','Autorização Detran','Contrato Social','Procuração'];
+function renderDocumentos(sec){
+  const vs=load(KV);
+  sec.innerHTML=`<div class="sel-row">
+    <select class="sel-veh" id="dvs" onchange="loadDocsVeh(this.value)">
+      <option value="">— Selecione um veículo —</option>
+      ${vs.map(v=>`<option value="${v.id}">${v.marca} ${v.modelo} ${v.ano}${v.placa?' — '+v.placa:''}</option>`).join('')}
+    </select>
+    <button class="btn-p" onclick="addDocModal()">+ Documento</button>
+  </div><div id="doc-area"><div class="empty-state">Selecione um veículo</div></div>`;
+}
+function loadDocsVeh(vid){
+  const sel=document.getElementById('dvs');if(sel&&vid)sel.value=vid;
+  const area=document.getElementById('doc-area');if(!area||!vid)return;
+  const docs=load(KD).filter(d=>d.veiculoId===vid);
+  const faltando=DOCS_PAD.filter(d=>!docs.map(x=>x.nome).includes(d));
+  area.innerHTML=`<div class="card"><div class="card-title">Documentos</div>
+    ${docs.length===0?'<div style="color:var(--text3);font-size:12px;padding:4px">Nenhum documento ainda</div>':
+    '<div class="doc-list">'+docs.map(d=>`<div class="doc-item"><span style="font-size:12px;color:var(--text);flex:1">${d.nome}</span><span style="font-size:11px;color:var(--text3);flex:1">${d.obs||''}</span>${d.pdfNome?'<span style="font-size:10px;color:var(--red);background:var(--redbg);padding:1px 6px;border-radius:6px;border:1px solid #4a1f1f">📄 '+d.pdfNome+'</span>':''}<span class="ds ${d.status==='ok'?'ds-ok':d.status==='pendente'?'ds-pend':'ds-miss'}">${d.status==='ok'?'Recebido':d.status==='pendente'?'Pendente':'Faltando'}</span><button class="btn-sm r" onclick="excluirDoc('${d.id}','${vid}')">×</button></div>`).join('')+'</div>'}
+    ${faltando.length?`<div style="margin-top:9px;font-size:11px;color:var(--text3)">Faltando: ${faltando.map(f=>`<span class="tag-chip">${f}</span>`).join(' ')}</div>`:''}
+  </div>`;
+}
+function addDocModal(){
+  const vid=document.getElementById('dvs')?.value;
+  if(!vid){toast('Selecione um veículo','#e05252');return}
+  openModal('Adicionar documento',`
+    <div class="fg" style="margin-bottom:10px"><div class="fl">Tipo</div><select id="md-n"><option>CRV (Certificado de Registro)</option><option>CRLV (Licenciamento)</option><option>Laudo de vistoria</option><option>Nota fiscal de compra</option><option>Laudo cautelar</option><option>Termo de responsabilidade</option><option>Autorização Detran</option><option>Contrato Social</option><option>Procuração</option><option>Outro</option></select></div>
+    <div class="fg" style="margin-bottom:10px"><div class="fl">Nome personalizado (se Outro)</div><input id="md-o" placeholder="Nome..."/></div>
+    <div class="fg" style="margin-bottom:10px"><div class="fl">Status</div><select id="md-s"><option value="ok">Recebido</option><option value="pendente">Pendente</option><option value="faltando">Faltando</option></select></div>
+    <div class="fg" style="margin-bottom:10px"><div class="fl">Observação</div><input id="md-ob" placeholder="Ex: aguardando despachante..."/></div>
+    <div class="fg" style="margin-bottom:14px">
+      <div class="fl">Anexar PDF (opcional)</div>
+      <label style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2)">
+        📄 Selecionar arquivo PDF
+        <input type="file" id="md-pdf" accept=".pdf,application/pdf" style="display:none" onchange="document.getElementById('md-pdf-name').textContent=this.files[0]?this.files[0].name:''"/>
+      </label>
+      <div id="md-pdf-name" style="font-size:11px;color:var(--text2);margin-top:4px"></div>
+    </div>
+    <div style="display:flex;gap:8px"><button class="btn-p" onclick="salvarDoc('${vid}')">Salvar</button><button class="btn-g" onclick="closeMD()">Cancelar</button></div>`);
+}
+function salvarDoc(vid){
+  const tipo=document.getElementById('md-n').value,outro=document.getElementById('md-o').value.trim();
+  const pdfInp=document.getElementById('md-pdf');
+  const pdfNome=pdfInp&&pdfInp.files[0]?pdfInp.files[0].name:'';
+  const doc={id:uid(),veiculoId:vid,nome:tipo==='Outro'&&outro?outro:tipo,status:document.getElementById('md-s').value,obs:document.getElementById('md-ob').value.trim(),pdfNome};
+  const lista=load(KD);lista.push(doc);save(KD,lista);closeMD();toast('Documento salvo!');loadDocsVeh(vid);
+}
+function excluirDoc(id,vid){if(!confirm('Remover?'))return;save(KD,load(KD).filter(d=>d.id!==id));toast('Removido');loadDocsVeh(vid)}
+
+// ══ VENDAS ════════════════════════════════════════════════════
+function renderVendas(sec){
+  const vs=load(KV),vendas=load(KVN),sellers=load(KS);
+  sec.innerHTML=`<div class="sel-row">
+    <select class="sel-veh" id="vvs" onchange="loadVendaForm(this.value)">
+      <option value="">— Selecione um veículo —</option>
+      ${vs.map(v=>`<option value="${v.id}">${v.marca} ${v.modelo} ${v.ano}${v.placa?' — '+v.placa:''}</option>`).join('')}
+    </select>
+  </div>
+  <div id="venda-form-area"><div class="empty-state">Selecione um veículo para registrar a venda</div></div>
+  <div class="card" style="margin-top:13px"><div class="card-title">Histórico de vendas</div>
+  <div class="tl">${vendas.length===0?'<div style="color:var(--text3);font-size:12px;padding:4px">Nenhuma venda registrada</div>':
+    vendas.slice(0,12).map(v=>{const veh=vs.find(x=>x.id===v.veiculoId);const s=sellers.find(x=>x.id===v.vendedorId);
+    return`<div class="tl-item"><div class="dot dot-g"></div><div>
+      <div class="tl-name">${veh?veh.marca+' '+veh.modelo+' '+veh.ano:'—'} — ${fmtR(v.valor)}</div>
+      <div class="tl-sub">${v.comprador} · ${v.pagamento}${s?' · 👤 '+s.nome:''}</div>
+      <div class="tl-date">${v.data||v.registradoEm}${v.comissaoPaga>0?` · <span style="color:var(--purple)">Com. R$${Math.round(v.comissaoPaga).toLocaleString('pt-BR')}</span>`:''}</div>
+    </div></div>`;}).join('')}
+  </div></div>`;
+}
+function loadVendaForm(vid){
+  const sel=document.getElementById('vvs');if(sel&&vid)sel.value=vid;
+  const area=document.getElementById('venda-form-area');if(!area||!vid)return;
+  const v=load(KV).find(x=>x.id===vid);const venda=load(KVN).find(x=>x.veiculoId===vid);const sellers=load(KS);
+  const selOpts=sellers.map(s=>`<option value="${s.id}" ${(venda?.vendedorId||v?.vendedorId)===s.id?'selected':''}>${s.nome} (${s.comissao||0}%)</option>`).join('');
+  area.innerHTML=`<div class="card"><div class="card-title">Registrar venda — ${v?v.marca+' '+v.modelo+' '+v.ano:''}</div>
+    <div class="frow"><div class="fg"><div class="fl">Comprador *</div><input id="vf-n" value="${venda?.comprador||''}" placeholder="João da Silva"/></div>
+    <div class="fg"><div class="fl">CPF / CNPJ</div><input id="vf-d" value="${venda?.documento||''}" placeholder="000.000.000-00"/></div></div>
+    <div class="frow"><div class="fg"><div class="fl">Telefone</div><input id="vf-t" value="${venda?.telefone||''}" placeholder="(41) 99999-0000"/></div>
+    <div class="fg"><div class="fl">Data</div><input id="vf-dt" type="date" value="${venda?.data||''}"/></div></div>
+    <div class="frow"><div class="fg"><div class="fl">Valor (R$)</div><input id="vf-v" value="${venda?.valor||v?.valorVenda||''}" placeholder="58.000" oninput="calcCDisplay()"/></div>
+    <div class="fg"><div class="fl">Pagamento</div><select id="vf-p"><option>À vista</option><option>Financiamento</option><option>Parcelado</option><option>Permuta</option></select></div></div>
+    <div class="frow"><div class="fg"><div class="fl">Vendedor</div><select id="vf-s" onchange="calcCDisplay()"><option value="">Sem vendedor</option>${selOpts}</select></div>
+    <div class="fg"><div class="fl">Comissão calculada</div><input id="vf-c" readonly placeholder="—" style="color:var(--purple)"/></div></div>
+    <div class="frow full"><div class="fg"><div class="fl">Observações</div><textarea id="vf-ob" placeholder="Detalhes...">${venda?.obs||''}</textarea></div></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn-p" onclick="salvarVenda('${vid}')">Registrar venda</button>
+      <button class="btn-sm b" style="padding:7px 12px;font-size:12px" onclick="gerarContrato('${vid}')">Contrato PDF</button>
+    </div></div>`;
+  if(venda)setTimeout(()=>{const s=document.getElementById('vf-p');if(s)s.value=venda.pagamento},50);
+  setTimeout(calcCDisplay,60);
+}
+function calcCDisplay(){
+  const sid=document.getElementById('vf-s')?.value,val=document.getElementById('vf-v')?.value;
+  const s=load(KS).find(x=>x.id===sid);const com=s?parseR(val)*(parseFloat(s.comissao||0)/100):0;
+  const el=document.getElementById('vf-c');if(el)el.value=s&&com>0?'R$ '+com.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—';
+}
+async function salvarVenda(vid){
+  const comprador=document.getElementById('vf-n').value.trim();
+  if(!comprador){toast('Informe o comprador','#e05252');return}
+  const sid=document.getElementById('vf-s').value,valor=document.getElementById('vf-v').value.trim();
+  const s=load(KS).find(x=>x.id===sid);const com=s?parseR(valor)*(parseFloat(s.comissao||0)/100):0;
+
+  const vendaData={veiculo_id:vid,comprador_nome:comprador,
+    comprador_doc:document.getElementById('vf-d').value.trim(),
+    comprador_tel:document.getElementById('vf-t').value.trim(),
+    data_venda:document.getElementById('vf-dt').value,
+    valor,pagamento:document.getElementById('vf-p').value,
+    vendedor_id:sid||null,comissao_paga:com,
+    obs:document.getElementById('vf-ob').value.trim()};
+
+  if(CU?.fromServer){
+    try{
+      const resp=await apiRequest('POST','/api/vendas',vendaData);
+      if(resp?.venda){
+        // Atualiza cache local
+        const venda={id:resp.venda.id,veiculoId:vid,comprador,documento:vendaData.comprador_doc,
+          telefone:vendaData.comprador_tel,data:vendaData.data_venda,valor,
+          pagamento:vendaData.pagamento,vendedorId:sid||null,comissaoPaga:com,
+          obs:vendaData.obs,registradoEm:new Date().toLocaleDateString('pt-BR')};
+        const lista=load(KVN).filter(x=>x.veiculoId!==vid);lista.unshift(venda);save(KVN,lista);
+        const veiculos=load(KV);const idx=veiculos.findIndex(x=>x.id===vid);
+        if(idx>=0){veiculos[idx].status='vendido';save(KV,veiculos);}
+        toast('Venda registrada!');showSec('vendas');return;
+      }
+      toast(resp?.error||'Erro ao registrar venda','#e05252');return;
+    }catch(e){toast('Erro de conexão — salvando localmente','#f5a623');}
+  }
+  // Fallback local
+  const venda={id:uid(),veiculoId:vid,comprador,documento:vendaData.comprador_doc,
+    telefone:vendaData.comprador_tel,data:vendaData.data_venda,valor,
+    pagamento:vendaData.pagamento,vendedorId:sid||null,comissaoPaga:com,
+    obs:vendaData.obs,registradoEm:new Date().toLocaleDateString('pt-BR')};
+  const lista=load(KVN).filter(x=>x.veiculoId!==vid);lista.unshift(venda);save(KVN,lista);
+  const veiculos=load(KV);const idx=veiculos.findIndex(x=>x.id===vid);
+  if(idx>=0){veiculos[idx].status='vendido';if(sid)veiculos[idx].vendedorId=sid;save(KV,veiculos)}
+  toast('Venda registrada!');showSec('vendas');
+}
+
+// ══ VENDEDORES ════════════════════════════════════════════════
+async function renderVendedores(sec){
+  if(CU?.fromServer){
+    try{
+      const data=await apiRequest('GET','/api/vendedores');
+      if(data?.vendedores){save(KS,data.vendedores);}
+    }catch(e){console.warn('Usando cache local');}
+  }
+  const sellers=load(KS),vendas=load(KVN),veiculos=load(KV);
+  const rk=sellers.map(s=>{const sv=vendas.filter(v=>v.vendedorId===s.id);const tot=sv.reduce((a,v)=>a+parseR(v.valor),0);const com=sv.reduce((a,v)=>a+calcCom(v,s),0);return{...s,tot,com,qtd:sv.length,ativos:veiculos.filter(v=>v.vendedorId===s.id&&v.status!=='vendido').length}}).sort((a,b)=>b.tot-a.tot);
+  sec.innerHTML=`<div class="row-between"><h3>Equipe de vendas</h3>
+    ${can('rh')||can('admin')||can('gerente')?`<button class="btn-p" onclick="openCadV()">+ Novo vendedor</button>`:''}
+  </div>
+  <div class="sgrid">${sellers.length===0?'<div class="empty-state" style="grid-column:1/-1">Nenhum vendedor cadastrado.</div>':
+    rk.map(s=>`<div class="scard">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px">
+        <div class="s-avatar" style="background:var(--purple)">${initials(s.nome)}</div>
+        <div style="display:flex;gap:4px">
+          <button class="btn-sm p" onclick="verVendedor('${s.id}')">Detalhes</button>
+          ${can('rh')||can('admin')||can('gerente')?`<button class="btn-sm" onclick="openCadV('${s.id}')">Editar</button><button class="btn-sm r" onclick="excluirV('${s.id}')">×</button>`:''}
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--text)">${s.nome}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.cargo||'Vendedor'}${s.telefone?' · '+s.telefone:''}</div>
+      <div class="com-badge">★ ${s.comissao||0}% comissão</div>
+      <div class="s-stats">
+        <div class="s-stat"><div class="s-stat-v">${s.qtd}</div><div class="s-stat-l">Vendas</div></div>
+        <div class="s-stat"><div class="s-stat-v">${s.ativos}</div><div class="s-stat-l">Carteira</div></div>
+        <div class="s-stat"><div class="s-stat-v" style="font-size:10px;color:var(--purple)">${s.com>0?'R$'+Math.round(s.com).toLocaleString('pt-BR'):'R$0'}</div><div class="s-stat-l">Comissões</div></div>
+      </div>
+    </div>`).join('')}
+  </div>
+  <div class="card"><div class="card-title">Ranking de vendas</div>
+    ${rk.length===0?'<div style="color:var(--text3);font-size:12px">Sem dados</div>':
+    rk.map((s,i)=>`<div class="rank-item">
+      <div class="rank-n ${['gold','silver','bronze'][i]||''}">${i+1}º</div>
+      <div class="rank-av" style="background:var(--purple)">${initials(s.nome)}</div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${s.nome}</div><div style="font-size:10px;color:var(--text2);margin-top:1px">${s.qtd} venda(s) · ${s.comissao||0}%</div></div>
+      <div style="text-align:right"><div style="font-size:12px;font-weight:700;color:var(--green)">${s.tot>0?'R$'+Math.round(s.tot).toLocaleString('pt-BR'):'R$0'}</div><div style="font-size:10px;color:var(--purple)">💰 R$${Math.round(s.com).toLocaleString('pt-BR')}</div></div>
+    </div>`).join('')}
+  </div>`;
+}
+function openCadV(id){
+  const s=id?load(KS).find(x=>x.id===id):null;
+  openModal(s?'Editar vendedor':'Novo vendedor',`
+    <input type="hidden" id="sv-id" value="${s?.id||''}"/>
+    <div class="frow" style="margin-bottom:10px"><div class="fg"><div class="fl">Nome *</div><input id="sv-n" value="${s?.nome||''}" placeholder="João Silva"/></div>
+    <div class="fg"><div class="fl">Cargo</div><input id="sv-c" value="${s?.cargo||''}" placeholder="Vendedor, Captador..."/></div></div>
+    <div class="frow" style="margin-bottom:10px"><div class="fg"><div class="fl">Telefone</div><input id="sv-t" value="${s?.telefone||''}" placeholder="(41) 99999-0000"/></div>
+    <div class="fg"><div class="fl">E-mail</div><input id="sv-e" value="${s?.email||''}" placeholder="joao@empresa.com"/></div></div>
+    <div class="frow" style="margin-bottom:14px"><div class="fg"><div class="fl">% Comissão</div><input id="sv-com" type="number" step="0.1" min="0" max="100" value="${s?.comissao||0}"/></div>
+    <div class="fg"><div class="fl">CPF</div><input id="sv-cpf" value="${s?.cpf||''}" placeholder="000.000.000-00"/></div></div>
+    <div style="display:flex;gap:8px"><button class="btn-p" onclick="salvarV()">Salvar</button><button class="btn-g" onclick="closeMD()">Cancelar</button></div>`);
+}
+async function salvarV(){
+  const nome=document.getElementById('sv-n').value.trim();if(!nome){toast('Informe o nome','#e05252');return}
+  const editId=document.getElementById('sv-id').value;
+  const sData={nome,cargo:document.getElementById('sv-c').value.trim(),
+    telefone:document.getElementById('sv-t').value.trim(),
+    email:document.getElementById('sv-e').value.trim(),
+    comissao:document.getElementById('sv-com').value,
+    cpf:document.getElementById('sv-cpf').value.trim()};
+
+  if(CU?.fromServer){
+    try{
+      const resp=editId
+        ? await apiRequest('PUT','/api/vendedores/'+editId,sData)
+        : await apiRequest('POST','/api/vendedores',sData);
+      if(resp?.vendedor){
+        const s={...sData,id:resp.vendedor.id,criadoEm:new Date().toLocaleDateString('pt-BR')};
+        const lista=load(KS);const idx=lista.findIndex(x=>x.id===s.id);
+        if(idx>=0)lista[idx]=s;else lista.push(s);
+        save(KS,lista);closeMD();toast('Vendedor salvo!');showSec('vendedores');return;
+      }
+      toast(resp?.error||'Erro ao salvar vendedor','#e05252');return;
+    }catch(e){toast('Erro de conexão — salvando localmente','#f5a623');}
+  }
+  const id=editId||uid();
+  const s={id,nome,...sData,criadoEm:new Date().toLocaleDateString('pt-BR')};
+  const lista=load(KS);const idx=lista.findIndex(x=>x.id===id);
+  if(idx>=0)lista[idx]=s;else lista.push(s);
+  save(KS,lista);closeMD();toast('Vendedor salvo!');showSec('vendedores');
+}
+function excluirV(id){if(!confirm('Excluir vendedor?'))return;save(KS,load(KS).filter(x=>x.id!==id));save(KV,load(KV).map(v=>v.vendedorId===id?{...v,vendedorId:null}:v));toast('Excluído');showSec('vendedores')}
+function verVendedor(id){
+  const s=load(KS).find(x=>x.id===id);if(!s)return;
+  const vendas=load(KVN).filter(v=>v.vendedorId===id);const veiculos=load(KV);
+  const carteira=veiculos.filter(v=>v.vendedorId===id);
+  const tot=vendas.reduce((a,v)=>a+parseR(v.valor),0);const com=vendas.reduce((a,v)=>a+calcCom(v,s),0);
+  openModal(s.nome,`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div class="s-stat"><div class="s-stat-v">${vendas.length}</div><div class="s-stat-l">Vendas</div></div>
+      <div class="s-stat"><div class="s-stat-v" style="font-size:11px;color:var(--green)">${tot>0?'R$'+Math.round(tot).toLocaleString('pt-BR'):'R$0'}</div><div class="s-stat-l">Faturado</div></div>
+      <div class="s-stat"><div class="s-stat-v" style="font-size:11px;color:var(--purple)">${com>0?'R$'+Math.round(com).toLocaleString('pt-BR'):'R$0'}</div><div class="s-stat-l">Comissões</div></div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">Carteira (${carteira.length})</div>
+    ${carteira.length===0?'<p style="font-size:12px;color:var(--text3);margin-bottom:10px">Nenhum veículo</p>':'<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">'+carteira.map(v=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)"><span style="font-size:12px;color:var(--text)">${v.marca} ${v.modelo} ${v.ano}</span><span style="font-size:12px;color:var(--green)">${fmtR(v.valorVenda)}</span></div>`).join('')+'</div>'}
+    <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">Vendas (${vendas.length})</div>
+    <div class="tl">${vendas.length===0?'<div style="font-size:12px;color:var(--text3)">Nenhuma venda</div>':vendas.map(v=>{const veh=veiculos.find(x=>x.id===v.veiculoId);return`<div class="tl-item"><div class="dot dot-g"></div><div><div class="tl-name">${veh?veh.marca+' '+veh.modelo:''} — ${fmtR(v.valor)}</div><div class="tl-sub">${v.comprador}</div><div class="tl-date">Comissão: <span style="color:var(--purple)">R$${Math.round(calcCom(v,s)).toLocaleString('pt-BR')}</span></div></div></div>`}).join('')}</div>`);
+}
+function atribuirV(vid){
+  const sellers=load(KS);const v=load(KV).find(x=>x.id===vid);if(!v)return;
+  openModal('Atribuir vendedor — '+v.marca+' '+v.modelo,`
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--bg2);border-radius:8px;border:1px solid var(--border);cursor:pointer"><input type="radio" name="sv" value=""/> <span style="font-size:12px;color:var(--text2)">Nenhum</span></label>
+      ${sellers.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 11px;background:var(--bg2);border-radius:8px;border:1px solid var(--border);cursor:pointer"><input type="radio" name="sv" value="${s.id}" ${v.vendedorId===s.id?'checked':''}/>${avDiv(s.nome,'vendedor',26,10)}<div><div style="font-size:12px;font-weight:600;color:var(--text)">${s.nome}</div><div style="font-size:10px;color:var(--text3)">${s.cargo||'Vendedor'} · ${s.comissao||0}%</div></div></label>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px"><button class="btn-p" onclick="confirmarAtr('${vid}')">Confirmar</button><button class="btn-g" onclick="closeMD()">Cancelar</button></div>`);
+}
+function confirmarAtr(vid){
+  const sel=document.querySelector('input[name="sv"]:checked');const sid=sel?sel.value:'';
+  const veiculos=load(KV);const idx=veiculos.findIndex(x=>x.id===vid);
+  if(idx>=0){veiculos[idx].vendedorId=sid||null;save(KV,veiculos)}
+  closeMD();toast('Vendedor atribuído!');filterEst();
+}
+
+// ══ ANÚNCIOS ══════════════════════════════════════════════════
+const PLATS=['OLX','WebMotors','MercadoLivre','Instagram / Meta Ads','iCarros','Site próprio'];
+function renderAnuncios(sec){
+  const vs=load(KV);
+  sec.innerHTML=`<div class="sel-row">
+    <select class="sel-veh" id="avs" onchange="loadAnunciosVeh(this.value)">
+      <option value="">— Selecione um veículo —</option>
+      ${vs.map(v=>`<option value="${v.id}">${v.marca} ${v.modelo} ${v.ano}${v.placa?' — '+v.placa:''}</option>`).join('')}
+    </select>
+  </div><div id="anuncio-area"><div class="empty-state">Selecione um veículo</div></div>`;
+}
+function loadAnunciosVeh(vid){
+  const sel=document.getElementById('avs');if(sel&&vid)sel.value=vid;
+  const area=document.getElementById('anuncio-area');if(!area||!vid)return;
+  const anus=load(KA).filter(a=>a.veiculoId===vid);const gl=p=>{const a=anus.find(x=>x.plataforma===p);return a?a.link:''};
+  area.innerHTML=PLATS.map(p=>`<div class="link-block"><div class="plat-lbl">${p}</div>
+    <div class="link-row"><input id="anu-${p.replace(/[^a-z0-9]/gi,'_')}" value="${gl(p)}" placeholder="Cole o link..."/>
+    <button class="open-btn" onclick="abrirLink('anu-${p.replace(/[^a-z0-9]/gi,'_')}')">Abrir ↗</button></div></div>`).join('')
+    +`<button class="btn-p" onclick="salvarAnus('${vid}')" style="margin-top:6px">Salvar links</button>`;
+}
+function abrirLink(id){const url=document.getElementById(id)?.value.trim();if(!url){toast('Nenhum link','#e05252');return}if(!url.startsWith('http')){toast('URL inválida','#e05252');return}window.open(url,'_blank')}
+function salvarAnus(vid){
+  const outros=load(KA).filter(a=>a.veiculoId!==vid);
+  const novos=PLATS.map(p=>{const el=document.getElementById('anu-'+p.replace(/[^a-z0-9]/gi,'_'));return{id:uid(),veiculoId:vid,plataforma:p,link:el?el.value.trim():''};}).filter(a=>a.link);
+  save(KA,[...outros,...novos]);toast('Links salvos!');
+}
+
+// ══ RELATÓRIO ═════════════════════════════════════════════════
+function renderRelatorio(sec){
+  const v=load(KV),vendas=load(KVN),sellers=load(KS);
+  const disp=v.filter(x=>x.status==='disponivel').length,res=0,vend=v.filter(x=>x.status==='vendido').length;
+  const totalVal=vendas.reduce((a,x)=>a+parseR(x.valor),0);
+  const rk=sellers.map(s=>{const sv=vendas.filter(x=>x.vendedorId===s.id);const tot=sv.reduce((a,x)=>a+parseR(x.valor),0);const com=sv.reduce((a,x)=>a+calcCom(x,s),0);return{...s,tot,com,qtd:sv.length}}).sort((a,b)=>b.tot-a.tot);
+  sec.innerHTML=`
+  <div class="stats">
+    <div class="sc"><div class="sc-lbl">Total</div><div class="sc-val">${v.length}</div><div class="sc-sub">veículos</div></div>
+    <div class="sc"><div class="sc-lbl">Disponíveis</div><div class="sc-val" style="color:var(--green)">${disp}</div></div>
+    <div class="sc"><div class="sc-lbl">Vendidos</div><div class="sc-val">${vend}</div></div>
+    <div class="sc"><div class="sc-lbl">Faturamento</div><div class="sc-val" style="font-size:15px;color:var(--green)">R$${totalVal.toLocaleString('pt-BR')}</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:4px">
+    <div class="card"><div class="card-title">Estoque por status</div>
+      ${[['Disponível',disp,'var(--green)'],['Vendido',vend,'var(--text3)']].map(([l,n,c])=>`<div class="rel-bar"><div class="rel-bar-lbl">${l}</div><div class="rel-bar-track"><div class="rel-bar-fill" style="width:${v.length?Math.round(n/v.length*100):0}%;background:${c}"></div></div><div class="rel-bar-val">${n}</div></div>`).join('')}
+    </div>
+    <div class="card"><div class="card-title">Top vendedores</div>
+      ${rk.length===0?'<div style="font-size:12px;color:var(--text3)">Sem dados</div>':rk.slice(0,5).map((s,i)=>`<div class="rank-item" style="margin-bottom:5px"><div class="rank-n ${['gold','silver','bronze'][i]||''}">${i+1}º</div><div class="rank-av" style="background:var(--purple)">${initials(s.nome)}</div><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${s.nome}</div><div style="font-size:10px;color:var(--text2)">${s.qtd} venda(s)</div></div><div style="text-align:right"><div style="font-size:11px;font-weight:700;color:var(--green)">${s.tot>0?'R$'+Math.round(s.tot).toLocaleString('pt-BR'):'R$0'}</div><div style="font-size:10px;color:var(--purple)">R$${Math.round(s.com).toLocaleString('pt-BR')}</div></div></div>`).join('')}
+    </div>
+  </div>
+  <div class="card" style="margin-top:13px"><div class="card-title"><span>Todos os veículos</span>
+    ${can('admin')||can('gerente')||can('financeiro')?`<button class="btn-sm b" onclick="exportarExcel()">Exportar Excel</button>`:''}
+  </div>
+  <div style="overflow-x:auto">${v.length===0?'<div style="font-size:12px;color:var(--text3)">Nenhum veículo</div>':
+    `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid var(--border)">${['Veículo','Ano','Placa','Avaria','Valor venda','Vendedor','Vistoria','Status'].map(h=>`<th style="text-align:left;padding:7px 9px;font-weight:600;color:var(--text3);white-space:nowrap">${h}</th>`).join('')}</tr></thead><tbody>${v.map(x=>{const s=sellers.find(y=>y.id===x.vendedorId);return`<tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 9px;white-space:nowrap">${x.marca} ${x.modelo}</td><td style="padding:7px 9px">${x.ano}</td><td style="padding:7px 9px">${x.placa||'—'}</td><td style="padding:7px 9px">${x.avaria||'—'}</td><td style="padding:7px 9px;white-space:nowrap">${fmtR(x.valorVenda)}</td><td style="padding:7px 9px;color:var(--purple)">${s?s.nome:'—'}</td><td style="padding:7px 9px;color:var(--lime)">${x.fromVistoria?`✓ ${x.vistoriaScore||0}pts`:'—'}</td><td style="padding:7px 9px"><span class="ds ${x.status==='disponivel'?'ds-ok':x.status==='reservado'?'ds-pend':'ds-miss'}">${statusLabel(x.status)}</span></td></tr>`}).join('')}</tbody></table>`}
+  </div></div>`;
+}
+function exportarExcel(){
+  const v=load(KV),sellers=load(KS);if(!v.length){toast('Nenhum veículo','#e05252');return}
+  const headers=['Tipo','Marca','Modelo','Ano','Cor','Placa','Km','Avaria','Valor Compra','Valor Venda','Vendedor','Vistoria','Status'];
+  const rows=v.map(x=>{const s=sellers.find(y=>y.id===x.vendedorId);return[x.tipo,x.marca,x.modelo,x.ano,x.cor,x.placa,x.km,x.avaria,x.valorCompra,x.valorVenda,s?s.nome:'',x.fromVistoria?'Sim':'Não',statusLabel(x.status)]});
+  const esc=c=>'"'+(c||'').toString().replace(/"/g,'""')+'"';
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(esc).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='autogestao_estoque.csv';a.click();URL.revokeObjectURL(url);
+  toast('Planilha exportada!');
+}
+
+// ══ USUÁRIOS ══════════════════════════════════════════════════
+function renderUsuarios(sec){
+  const users=getUsers();
+  sec.innerHTML=`<div class="row-between"><h3>Usuários do sistema</h3><button class="btn-p" onclick="openCadU()">+ Novo usuário</button></div>
+  <div class="card"><div class="card-title">Usuários cadastrados <span style="font-size:11px;font-weight:400;color:var(--text3)">${users.length}</span></div>
+  <div style="overflow-x:auto"><table class="utbl">
+    <thead><tr><th>Usuário</th><th>Nome</th><th>Cargo</th><th>E-mail</th><th>Cadastrado</th><th></th></tr></thead>
+    <tbody>${users.map(u=>`<tr><td><div style="display:flex;align-items:center;gap:8px">${avDiv(u.nome,u.cargo,26,9)}<b style="font-size:12px;color:var(--text)">${u.username}</b></div></td>
+      <td style="color:var(--text)">${u.nome}</td><td>${roleTag(u.cargo)}</td>
+      <td style="color:var(--text2)">${u.email||'—'}</td><td style="color:var(--text3)">${u.criadoEm||'—'}</td>
+      <td><div style="display:flex;gap:4px"><button class="btn-sm" onclick="openCadU('${u.id}')">Editar</button>${u.id!=='u0'?`<button class="btn-sm r" onclick="excluirU('${u.id}')">×</button>`:''}</div></td>
+    </tr>`).join('')}</tbody>
+  </table></div></div>
+  <div class="card"><div class="card-title">Permissões por cargo</div>
+  <div style="overflow-x:auto"><table class="utbl">
+    <thead><tr><th>Módulo</th>${Object.keys(ROLES).map(r=>`<th>${roleTag(r)}</th>`).join('')}</tr></thead>
+    <tbody>${NAV_ORDER.map(nav=>`<tr><td style="color:var(--text2)">${NAV_LABELS[nav]}</td>${Object.keys(ROLES).map(r=>`<td style="text-align:center">${ROLES[r].nav.includes(nav)?'<span style="color:var(--green)">✓</span>':'<span style="color:var(--text3)">—</span>'}</td>`).join('')}</tr>`).join('')}
+    </tbody>
+  </table></div></div>`;
+}
+function openCadU(id){
+  const users=getUsers();const u=id?users.find(x=>x.id===id):null;
+  openModal(u?'Editar usuário':'Novo usuário',`
+    <input type="hidden" id="cu-id" value="${u?.id||''}"/>
+    <div class="frow" style="margin-bottom:10px"><div class="fg"><div class="fl">Nome *</div><input id="cu-n" value="${u?.nome||''}" placeholder="João Silva"/></div>
+    <div class="fg"><div class="fl">Usuário (login) *</div><input id="cu-u" value="${u?.username||''}" placeholder="joao.silva"/></div></div>
+    <div class="frow" style="margin-bottom:10px"><div class="fg"><div class="fl">Senha ${u?'(em branco = manter)':'*'}</div><input id="cu-p" type="password" placeholder="••••••••"/></div>
+    <div class="fg"><div class="fl">E-mail</div><input id="cu-e" value="${u?.email||''}" placeholder="joao@empresa.com"/></div></div>
+    <div class="frow" style="margin-bottom:14px"><div class="fg"><div class="fl">Cargo / Acesso *</div>
+      <select id="cu-c">${Object.keys(ROLES).map(r=>`<option value="${r}" ${u?.cargo===r?'selected':''}>${ROLES[r].label}</option>`).join('')}</select>
+    </div>
+    <div class="fg"><div class="fl">Telefone</div><input id="cu-t" value="${u?.telefone||''}" placeholder="(41) 99999-0000"/></div></div>
+    <div style="display:flex;gap:8px"><button class="btn-p" onclick="salvarU()">Salvar</button><button class="btn-g" onclick="closeMD()">Cancelar</button></div>`);
+}
+function salvarU(){
+  const nome=document.getElementById('cu-n').value.trim(),username=document.getElementById('cu-u').value.trim().toLowerCase();
+  const pass=document.getElementById('cu-p').value,id=document.getElementById('cu-id').value||uid();
+  if(!nome||!username){toast('Preencha nome e usuário','#e05252');return}
+  const users=getUsers();const existing=users.find(x=>x.id===id);
+  const u={id,nome,username,password:pass||(existing?.password||''),email:document.getElementById('cu-e').value.trim(),cargo:document.getElementById('cu-c').value,telefone:document.getElementById('cu-t').value.trim(),criadoEm:existing?.criadoEm||new Date().toLocaleDateString('pt-BR')};
+  if(!u.password){toast('Informe a senha','#e05252');return}
+  const idx=users.findIndex(x=>x.id===id);if(idx>=0)users[idx]=u;else users.push(u);
+  save(KU,users);closeMD();toast('Usuário salvo!');showSec('usuarios');
+}
+function excluirU(id){
+  if(id===CU?.id){toast('Não pode excluir seu próprio usuário','#e05252');return}
+  if(!confirm('Excluir usuário?'))return;save(KU,load(KU).filter(x=>x.id!==id));toast('Excluído');showSec('usuarios');
+}
+
+// ══ PERFIL ════════════════════════════════════════════════════
+function renderPerfil(sec){
+  const role=ROLES[CU.cargo]||ROLES.visualizador;
+  sec.innerHTML=`<div class="card" style="max-width:440px">
+    <div class="card-title">Meu perfil</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <div style="width:56px;height:56px;border-radius:50%;background:${role.color};display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#0f1117">${initials(CU.nome)}</div>
+      <div><div style="font-size:17px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">${CU.nome}</div><div style="margin-top:5px">${roleTag(CU.cargo)}</div><div style="font-size:12px;color:var(--text3);margin-top:4px">@${CU.username}</div></div>
+    </div>
+    <div class="frow" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">E-mail</div><input value="${CU.email||''}" readonly style="color:var(--text2)"/></div>
+      <div class="fg"><div class="fl">Telefone</div><input value="${CU.telefone||''}" readonly style="color:var(--text2)"/></div>
+    </div>
+    <div style="height:1px;background:var(--border);margin:14px 0"></div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px;font-weight:600">Alterar senha</div>
+    <div class="frow full" style="margin-bottom:10px"><div class="fg"><div class="fl">Senha atual</div><input id="p-old" type="password" placeholder="••••••••"/></div></div>
+    <div class="frow" style="margin-bottom:14px">
+      <div class="fg"><div class="fl">Nova senha</div><input id="p-new" type="password" placeholder="••••••••"/></div>
+      <div class="fg"><div class="fl">Confirmar</div><input id="p-conf" type="password" placeholder="••••••••"/></div>
+    </div>
+    <button class="btn-p" onclick="alterarSenha()">Atualizar senha</button>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:7px;font-weight:600">Módulos com acesso:</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">${(ROLES[CU.cargo]?.nav||[]).map(n=>`<span style="font-size:11px;padding:3px 8px;border-radius:6px;background:var(--bg2);color:var(--text2);border:1px solid var(--border)">${NAV_LABELS[n]}</span>`).join('')}</div>
+    </div>
+  </div>`;
+}
+function alterarSenha(){
+  const old=document.getElementById('p-old').value,nw=document.getElementById('p-new').value,conf=document.getElementById('p-conf').value;
+  if(old!==CU.password){toast('Senha atual incorreta','#e05252');return}
+  if(!nw||nw.length<4){toast('Senha muito curta','#e05252');return}
+  if(nw!==conf){toast('Senhas não conferem','#e05252');return}
+  const users=getUsers();const idx=users.findIndex(x=>x.id===CU.id);
+  if(idx>=0){users[idx].password=nw;save(KU,users);CU.password=nw;setSess(CU)}
+  toast('Senha alterada!');
+}
+
+// ══ CONTRATO PDF ══════════════════════════════════════════════
+function gerarContrato(vid){
+  const v=load(KV).find(x=>x.id===vid);if(!v)return;
+  const venda=load(KVN).find(x=>x.veiculoId===vid);
+  const data=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Contrato — ${v.marca} ${v.modelo}</title>
+<style>body{font-family:Georgia,serif;max-width:740px;margin:40px auto;padding:20px;color:#111;line-height:1.75}h1{text-align:center;font-size:18px;text-transform:uppercase;margin-bottom:4px;letter-spacing:.05em}.sub{text-align:center;font-size:13px;color:#555;margin-bottom:32px}.section{margin:22px 0}h2{font-size:13px;border-bottom:1px solid #bbb;padding-bottom:4px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}p{margin:7px 0;font-size:13px}.field{display:inline-block;min-width:200px;border-bottom:1px solid #333}.assinaturas{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:70px}.ass-box{text-align:center}.ass-line{border-top:1px solid #333;margin-top:60px;padding-top:7px;font-size:12px}@media print{body{margin:20px}}</style></head><body>
+<h1>Contrato de Compra e Venda de Veículo</h1><div class="sub">Emitido em ${data}${v.vistoriador?' · Vistoriador: '+v.vistoriador:''}</div>
+<div class="section"><h2>Dados do Vendedor / Empresa</h2><p>Razão Social: <span class="field">___________________________</span></p><p>CNPJ/CPF: <span class="field">___________________________</span></p><p>Endereço: <span class="field">___________________________</span></p></div>
+<div class="section"><h2>Dados do Comprador</h2><p>Nome: <span class="field">${venda?.comprador||'___________________________'}</span></p><p>CPF/CNPJ: <span class="field">${venda?.documento||'___________________________'}</span></p><p>Telefone: <span class="field">${venda?.telefone||'___________________________'}</span></p></div>
+<div class="section"><h2>Dados do Veículo</h2><p>Tipo: <b>${v.tipo}</b> &nbsp;·&nbsp; Marca: <b>${v.marca}</b> &nbsp;·&nbsp; Modelo: <b>${v.modelo}</b> &nbsp;·&nbsp; Ano: <b>${v.ano}</b></p><p>Cor: <b>${v.cor||'—'}</b> &nbsp;·&nbsp; Placa: <b>${v.placa||'—'}</b> &nbsp;·&nbsp; Chassi: <b>${v.chassi||'—'}</b></p><p>Km: <b>${v.km||'—'}</b> &nbsp;·&nbsp; Avaria: <b>${v.avaria}</b> &nbsp;·&nbsp; Nível: <b>${v.dano}</b></p>${v.descAvaria?`<p>Descrição: ${v.descAvaria}</p>`:''}</div>
+<div class="section"><h2>Condições da Venda</h2><p>Valor acordado: <b>${fmtR(venda?.valor||v.valorVenda)}</b> &nbsp;·&nbsp; Pagamento: <b>${venda?.pagamento||'—'}</b></p><p>Data: <b>${venda?.data||venda?.registradoEm||'—'}</b></p>${venda?.obs?`<p>Observações: ${venda.obs}</p>`:''}</div>
+<div class="section"><h2>Cláusulas</h2><p>1. O veículo é vendido no estado em que se encontra (sinistrado/batido), com todos os danos de ciência do comprador.</p><p>2. O comprador declara estar ciente das avarias, adquirindo-o sem garantia de funcionamento.</p><p>3. A transferência de propriedade e registro junto ao DETRAN é de responsabilidade do comprador após assinatura.</p><p>4. O vendedor se responsabiliza por débitos (IPVA, multas, DPVAT) anteriores à data da venda.</p></div>
+<div class="assinaturas"><div class="ass-box"><div class="ass-line">Vendedor / Empresa</div></div><div class="ass-box"><div class="ass-line">${venda?.comprador||'Comprador'}</div></div></div></body></html>`;
+  const blob=new Blob([html],{type:'text/html'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`contrato-${v.marca}-${v.modelo}-${v.ano}.html`;a.click();URL.revokeObjectURL(url);
+  toast('Contrato gerado! Abra o arquivo e imprima como PDF.');
+}
+
+// ══ RENDERS MAP ═══════════════════════════════════════════════
+// ══ BACKUP ════════════════════════════════════════════════════
+function renderBackup(sec){
+  const v=load(KV),vns=load(KVN),sellers=load(KS),docs=load(KD),users=getUsers(),anus=load(KA);
+  const fotos=load(KF);
+  const totalFotos=fotos.length;
+  const fotosSizeKB=fotos.reduce((a,f)=>{try{return a+Math.round((f.data?.length||0)*0.75/1024)}catch{return a}},0);
+  const lastBackup=localStorage.getItem('ag4_last_backup');
+  sec.innerHTML=`
+  <div style="margin-bottom:16px">
+    <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">💾 Backup & Exportação</h3>
+    <p style="font-size:13px;color:var(--text2)">Baixe uma cópia completa e organizada de todos os dados da empresa no seu computador.</p>
+  </div>
+
+  <!-- RESUMO DO QUE SERÁ EXPORTADO -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:18px">
+    ${[
+      ['Veículos',v.length,'var(--green)'],
+      ['Vendas',vns.length,'var(--amber)'],
+      ['Vendedores',sellers.length,'var(--purple)'],
+      ['Fotos',totalFotos,'var(--blue)'],
+    ].map(([l,n,c])=>`<div class="sc"><div class="sc-lbl">${l}</div><div class="sc-val" style="color:${c}">${n}</div><div class="sc-sub">registros</div></div>`).join('')}
+  </div>
+
+  <!-- OPÇÕES DE EXPORTAÇÃO -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:14px">
+
+    <!-- BACKUP COMPLETO -->
+    <div class="card" style="border-color:var(--green3)">
+      <div class="card-title" style="border-color:var(--green3)">
+        <span style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:18px">📦</span>
+          <span>Backup completo</span>
+        </span>
+        <span style="font-size:10px;background:var(--greenbg);color:var(--green);padding:2px 8px;border-radius:20px;border:1px solid var(--green3);font-weight:700">RECOMENDADO</span>
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Exporta <b style="color:var(--text)">tudo</b> em um arquivo JSON estruturado: veículos, vendas, vendedores, documentos, anúncios e configurações. Pode ser reimportado futuramente.</p>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+        ${[
+          `✓ ${v.length} veículos com todos os campos`,
+          `✓ ${vns.length} vendas e comissões`,
+          `✓ ${docs.length} documentos cadastrados`,
+          `✓ ${sellers.length} vendedores e comissões`,
+          `✓ ${anus.length} links de anúncios`,
+          `✓ Configurações e usuários`,
+        ].map(t=>`<div style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px"><span style="color:var(--green);font-size:12px">✓</span>${t.replace('✓ ','')}</div>`).join('')}
+      </div>
+      <button class="btn-p" style="width:100%;padding:10px;font-size:13px" onclick="exportarBackupCompleto()">⬇ Baixar backup completo (.json)</button>
+    </div>
+
+    <!-- FOTOS -->
+    <div class="card">
+      <div class="card-title"><span style="display:flex;align-items:center;gap:7px"><span style="font-size:18px">🖼️</span><span>Fotos dos veículos</span></span></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">${totalFotos} foto(s) armazenadas, tamanho estimado: <b style="color:var(--text)">${fotosSizeKB>1024?(fotosSizeKB/1024).toFixed(1)+' MB':fotosSizeKB+' KB'}</b>.<br/>Exporta uma pasta ZIP com as fotos organizadas por veículo.</p>
+      <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;margin-bottom:14px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Fotos por veículo</div>
+        ${v.filter(x=>load(KF).some(f=>f.veiculoId===x.id)).slice(0,5).map(x=>{
+          const qt=load(KF).filter(f=>f.veiculoId===x.id).length;
+          return`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">${x.marca} ${x.modelo} ${x.ano}</span><span style="color:var(--green);font-weight:600">${qt} foto(s)</span></div>`;
+        }).join('')}
+        ${v.filter(x=>load(KF).some(f=>f.veiculoId===x.id)).length>5?`<div style="font-size:10px;color:var(--text3);margin-top:4px">+ ${v.filter(x=>load(KF).some(f=>f.veiculoId===x.id)).length-5} veículos com fotos</div>`:''}
+        ${totalFotos===0?'<div style="font-size:12px;color:var(--text3);padding:4px 0">Nenhuma foto cadastrada ainda</div>':''}
+      </div>
+      <button class="btn-p" style="width:100%;padding:10px;font-size:13px;background:var(--blue);${totalFotos===0?'opacity:.5;cursor:not-allowed':''}" onclick="${totalFotos>0?'exportarFotosZip()':'void(0)'}" ${totalFotos===0?'disabled':''}>⬇ Baixar fotos (.zip)</button>
+    </div>
+
+  </div>
+
+  <!-- EXPORTAÇÕES ESPECÍFICAS -->
+  <div class="card">
+    <div class="card-title">📊 Exportações por módulo</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      ${[
+        {icon:'🚗',label:'Estoque completo',sub:`${v.length} veículos`,fn:'exportCSV_veiculos',ext:'CSV'},
+        {icon:'💰',label:'Histórico de vendas',sub:`${vns.length} vendas`,fn:'exportCSV_vendas',ext:'CSV'},
+        {icon:'👥',label:'Vendedores + comissões',sub:`${sellers.length} vendedores`,fn:'exportCSV_vendedores',ext:'CSV'},
+        {icon:'📄',label:'Documentos',sub:`${docs.length} docs`,fn:'exportCSV_documentos',ext:'CSV'},
+        {icon:'📋',label:'Relatório financeiro',sub:'Faturamento geral',fn:'exportCSV_financeiro',ext:'CSV'},
+        {icon:'🔗',label:'Links de anúncios',sub:`${anus.length} links`,fn:'exportCSV_anuncios',ext:'CSV'},
+      ].map(e=>`
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:12px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:20px">${e.icon}</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${e.label}</div>
+          <div style="font-size:10px;color:var(--text3)">${e.sub}</div>
+          <button class="btn-sm b" style="margin-top:4px;padding:5px 8px" onclick="${e.fn}()">⬇ ${e.ext}</button>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- RESTAURAR BACKUP -->
+  <div class="card" style="border-color:#3a2a6a">
+    <div class="card-title" style="border-color:#3a2a6a">
+      <span style="display:flex;align-items:center;gap:7px"><span style="font-size:18px">🔄</span><span style="color:var(--purple)">Restaurar backup</span></span>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">Importe um arquivo de backup (.json) gerado por este sistema. <b style="color:var(--red)">Atenção: os dados atuais serão substituídos pelos dados do backup.</b></p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label class="btn-g" style="cursor:pointer;display:flex;align-items:center;gap:6px">
+        📂 Selecionar arquivo .json
+        <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restaurarBackup(this)"/>
+      </label>
+      <span style="font-size:11px;color:var(--text3)">Somente arquivos gerados por esta ferramenta</span>
+    </div>
+    ${lastBackup?`<div style="margin-top:10px;font-size:11px;color:var(--text3)">Último backup baixado: <b style="color:var(--text2)">${new Date(parseInt(lastBackup)).toLocaleString('pt-BR')}</b></div>`:''}
+  </div>`;
+}
+
+// ── Backup completo JSON ───────────────────────────────────────────
+function exportarBackupCompleto(){
+  const data={
+    version:'autogestao-backup-v1',
+    empresa:CU?.nome||'empresa',
+    geradoPor:CU?.username||'—',
+    geradoEm:new Date().toISOString(),
+    data:{
+      veiculos:load(KV),
+      vendas:load(KVN),
+      vendedores:load(KS),
+      documentos:load(KD),
+      anuncios:load(KA),
+      fotos:load(KF),
+      usuarios:getUsers().map(u=>({...u,password:undefined,senha_hash:undefined})),
+    },
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const ts=new Date().toISOString().slice(0,10);
+  a.href=url;a.download=`autogestao-backup-${ts}.json`;a.click();
+  URL.revokeObjectURL(url);
+  localStorage.setItem('ag4_last_backup',Date.now().toString());
+  toast('Backup completo baixado com sucesso! 💾');
+}
+
+// ── Exportar fotos como ZIP ────────────────────────────────────────
+async function exportarFotosZip(){
+  const fotos=load(KF);const veiculos=load(KV);
+  if(!fotos.length){toast('Nenhuma foto para exportar','#e05252');return}
+  toast('Preparando ZIP das fotos...');
+
+  // Gera HTML com todas as fotos organizadas por veículo (fallback sem JSZip)
+  const grupos={};
+  fotos.forEach(f=>{
+    const v=veiculos.find(x=>x.id===f.veiculoId);
+    const key=v?`${v.marca} ${v.modelo} ${v.ano} (${v.placa||'sem placa'})`:'Sem veículo';
+    if(!grupos[key])grupos[key]=[];
+    grupos[key].push(f);
+  });
+
+  let html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Fotos N2 AutoSYS — ${new Date().toLocaleDateString('pt-BR')}</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#0f1117;color:#e8edf5;padding:24px;margin:0}
+    h1{color:#22c98a;font-size:20px;margin-bottom:4px}
+    .sub{color:#8899b0;font-size:13px;margin-bottom:28px}
+    .vgroup{margin-bottom:32px}
+    .vtitle{font-size:15px;font-weight:700;color:#fff;margin-bottom:12px;padding:8px 12px;background:#1e2535;border-radius:8px;border-left:3px solid #22c98a}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+    .fcard{background:#161b24;border-radius:8px;overflow:hidden;border:1px solid #2a3347}
+    .fcard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+    .fname{font-size:10px;color:#8899b0;padding:6px 8px;text-align:center}
+    .footer{margin-top:32px;font-size:11px;color:#556070;text-align:center}
+    @media print{body{background:white;color:black}.vtitle{background:#f0f3fa;color:#0a0e1a}}
+  </style></head><body>
+  <h1>📷 Fotos dos Veículos — N2 AutoSYS</h1>
+  <div class="sub">Gerado em ${new Date().toLocaleString('pt-BR')} · ${fotos.length} foto(s) · ${Object.keys(grupos).length} veículo(s)</div>`;
+
+  for(const [vName,fs] of Object.entries(grupos)){
+    html+=`<div class="vgroup"><div class="vtitle">🚗 ${vName} — ${fs.length} foto(s)</div><div class="grid">`;
+    fs.forEach(f=>{
+      html+=`<div class="fcard"><img src="${f.data}" alt="${f.nome||'foto'}"/><div class="fname">${f.nome||'foto'}</div></div>`;
+    });
+    html+=`</div></div>`;
+  }
+  html+=`<div class="footer">N2 AutoSYS · Backup de fotos · ${new Date().toLocaleDateString('pt-BR')}</div></body></html>`;
+
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`autogestao-fotos-${new Date().toISOString().slice(0,10)}.html`;a.click();
+  URL.revokeObjectURL(url);
+  toast('Arquivo de fotos baixado! Abra no navegador para visualizar.');
+}
+
+// ── Helpers CSV ───────────────────────────────────────────────────
+function csvDownload(filename,headers,rows){
+  const esc=c=>'"'+(c===null||c===undefined?'':String(c).replace(/"/g,'""'))+'"';
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(esc).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
+  toast(`${filename} exportado!`);
+}
+
+function exportCSV_veiculos(){
+  const v=load(KV),sellers=load(KS);
+  csvDownload(`veiculos-${new Date().toISOString().slice(0,10)}.csv`,
+    ['Tipo','Marca','Modelo','Ano','Cor','Placa','Km','Chassi','Local','Avaria','Nível dano','Desc. avaria','Valor compra','Valor venda','Status','Vendedor','De vistoria','Score vistoria','Obs','Cadastrado em'],
+    v.map(x=>{const s=sellers.find(y=>y.id===x.vendedorId);return[x.tipo,x.marca,x.modelo,x.ano,x.cor,x.placa,x.km,x.chassi,x.local,x.avaria,x.dano,x.descAvaria,x.valorCompra,x.valorVenda,x.status==='disponivel'?'Disponível':'Vendido',s?s.nome:'',x.fromVistoria?'Sim':'Não',x.vistoriaScore||'',x.obs,x.criadoEm]})
+  );
+}
+
+function exportCSV_vendas(){
+  const vns=load(KVN),v=load(KV),sellers=load(KS);
+  csvDownload(`vendas-${new Date().toISOString().slice(0,10)}.csv`,
+    ['Veículo','Marca','Modelo','Ano','Placa','Comprador','CPF/CNPJ','Telefone','Data venda','Valor','Pagamento','Vendedor','Comissão paga','Obs','Registrado em'],
+    vns.map(x=>{const veh=v.find(y=>y.id===x.veiculoId);const s=sellers.find(y=>y.id===x.vendedorId);return[veh?veh.marca+' '+veh.modelo:'—',veh?.marca||'',veh?.modelo||'',veh?.ano||'',veh?.placa||'',x.comprador,x.documento,x.telefone,x.data,x.valor,x.pagamento,s?s.nome:'',x.comissaoPaga||0,x.obs,x.registradoEm]})
+  );
+}
+
+function exportCSV_vendedores(){
+  const sellers=load(KS),vns=load(KVN);
+  csvDownload(`vendedores-${new Date().toISOString().slice(0,10)}.csv`,
+    ['Nome','Cargo','Telefone','Email','CPF','Comissão %','Qtd vendas','Total vendido R$','Total comissões R$','Cadastrado em'],
+    sellers.map(s=>{const sv=vns.filter(v=>v.vendedorId===s.id);const tot=sv.reduce((a,v)=>a+parseR(v.valor),0);const com=sv.reduce((a,v)=>a+(v.comissaoPaga||0),0);return[s.nome,s.cargo,s.telefone,s.email,s.cpf,s.comissao,sv.length,tot.toFixed(2),com.toFixed(2),s.criadoEm]})
+  );
+}
+
+function exportCSV_documentos(){
+  const docs=load(KD),v=load(KV);
+  csvDownload(`documentos-${new Date().toISOString().slice(0,10)}.csv`,
+    ['Veículo','Marca','Modelo','Placa','Documento','Status','Observação'],
+    docs.map(d=>{const veh=v.find(y=>y.id===d.veiculoId);return[veh?veh.marca+' '+veh.modelo:'—',veh?.marca||'',veh?.modelo||'',veh?.placa||'',d.nome,d.status==='ok'?'Recebido':d.status==='pendente'?'Pendente':'Faltando',d.obs||'']})
+  );
+}
+
+function exportCSV_financeiro(){
+  const vns=load(KVN),v=load(KV),sellers=load(KS);
+  const totalFat=vns.reduce((a,x)=>a+parseR(x.valor),0);
+  const totalCom=vns.reduce((a,x)=>a+(x.comissaoPaga||0),0);
+  const totalComp=v.reduce((a,x)=>a+parseR(x.valorCompra),0);
+  const lucroEst=totalFat-totalComp-totalCom;
+
+  // resumo no topo + detalhes
+  const rows=[
+    ['=== RESUMO FINANCEIRO ===','','','',''],
+    ['Total faturado',totalFat.toFixed(2),'','',''],
+    ['Total custo compra',totalComp.toFixed(2),'','',''],
+    ['Total comissões pagas',totalCom.toFixed(2),'','',''],
+    ['Lucro estimado',lucroEst.toFixed(2),'','',''],
+    ['','','','',''],
+    ['=== DETALHAMENTO POR VENDA ===','','','',''],
+  ];
+  vns.forEach(x=>{
+    const veh=v.find(y=>y.id===x.veiculoId);const s=sellers.find(y=>y.id===x.vendedorId);
+    rows.push([veh?veh.marca+' '+veh.modelo:'—',x.data||x.registradoEm,x.comprador,parseR(x.valor).toFixed(2),s?s.nome:'Sem vendedor',(x.comissaoPaga||0).toFixed(2)]);
+  });
+  csvDownload(`financeiro-${new Date().toISOString().slice(0,10)}.csv`,
+    ['Descrição / Veículo','Data / Valor','Comprador','Valor R$','Vendedor','Comissão R$'],rows
+  );
+}
+
+function exportCSV_anuncios(){
+  const anus=load(KA),v=load(KV);
+  csvDownload(`anuncios-${new Date().toISOString().slice(0,10)}.csv`,
+    ['Veículo','Marca','Modelo','Placa','Plataforma','Link'],
+    anus.map(a=>{const veh=v.find(y=>y.id===a.veiculoId);return[veh?veh.marca+' '+veh.modelo:'—',veh?.marca||'',veh?.modelo||'',veh?.placa||'',a.plataforma,a.link||'']})
+  );
+}
+
+// ── Restaurar backup ──────────────────────────────────────────────
+function restaurarBackup(input){
+  if(!input.files.length)return;
+  if(!confirm('⚠️ Restaurar o backup irá SUBSTITUIR todos os dados atuais.\n\nTem certeza que deseja continuar?'))return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const raw=JSON.parse(e.target.result);
+      if(raw.version!=='autogestao-backup-v1'){toast('Arquivo inválido — não é um backup do N2 AutoSYS','#e05252');return}
+      const d=raw.data;
+      if(d.veiculos)  save(KV,d.veiculos);
+      if(d.vendas)    save(KVN,d.vendas);
+      if(d.vendedores)save(KS,d.vendedores);
+      if(d.documentos)save(KD,d.documentos);
+      if(d.anuncios)  save(KA,d.anuncios);
+      if(d.fotos)     save(KF,d.fotos);
+      toast(`Backup restaurado! ${d.veiculos?.length||0} veículos, ${d.vendas?.length||0} vendas.`);
+      setTimeout(()=>showSec('estoque'),800);
+    }catch(err){toast('Erro ao ler o arquivo: '+err.message,'#e05252')}
+  };
+  reader.readAsText(input.files[0]);
+  input.value='';
+}
+
+const RENDERS={
+  estoque:renderEstoque,cadastro:renderCadastro,fotos:renderFotos,documentos:renderDocumentos,
+  vendas:renderVendas,vistoria:renderVistoria,vendedores:renderVendedores,anuncios:renderAnuncios,
+  orcamentos:renderOrcamentos,seguradora:renderSeguradora,
+  relatorio:renderRelatorio,backup:renderBackup,usuarios:renderUsuarios,perfil:renderPerfil
+};
+
+// ══ ORÇAMENTOS ════════════════════════════════════════════════
+function renderOrcamentos(sec){
+  const veiculos=load(KV);
+  const orcs=load(KOR);
+  const total=orcs.length;
+  const aprovados=orcs.filter(o=>o.status==='aprovado').length;
+  const pendentes=orcs.filter(o=>o.status==='pendente').length;
+  const totalValor=orcs.filter(o=>o.status==='aprovado').reduce((a,o)=>a+parseR(o.valor),0);
+  sec.innerHTML=`
+  <div class="stats">
+    <div class="sc"><div class="sc-lbl">Total</div><div class="sc-val">${total}</div><div class="sc-sub">orçamentos</div></div>
+    <div class="sc"><div class="sc-lbl">Pendentes</div><div class="sc-val" style="color:var(--amber)">${pendentes}</div></div>
+    <div class="sc"><div class="sc-lbl">Aprovados</div><div class="sc-val" style="color:var(--green)">${aprovados}</div></div>
+    <div class="sc"><div class="sc-lbl">Valor aprovado</div><div class="sc-val" style="font-size:15px;color:var(--green)">R$${totalValor.toLocaleString('pt-BR')}</div></div>
+  </div>
+  <div class="row-between">
+    <h3>Orçamentos de venda</h3>
+    <button class="btn-p" onclick="openNovoOrcamento()">+ Novo orçamento</button>
+  </div>
+  <div id="orc-lista">${orcs.length===0?`<div class="empty-state">Nenhum orçamento cadastrado.<br/>Clique em "+ Novo orçamento" para começar.</div>`:
+    orcs.sort((a,b)=>b.criadoEm.localeCompare(a.criadoEm)).map(o=>{
+      const v=veiculos.find(x=>x.id===o.veiculoId);
+      const stMap={pendente:{cl:'br',lbl:'Pendente'},aprovado:{cl:'bd',lbl:'Aprovado'},recusado:{cl:'bv',lbl:'Recusado'},expirado:{cl:'bv',lbl:'Expirado'}};
+      const st=stMap[o.status]||stMap.pendente;
+      return`<div class="vcard" style="margin-bottom:10px">
+        <div class="vinfo" style="padding:13px 15px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <div>
+              <div class="vname">${o.nomeCliente||'Cliente não informado'}</div>
+              <div class="vdetail">${o.telefone||''}${o.email?' · '+o.email:''}</div>
+            </div>
+            <span class="badge ${st.cl}" style="position:static">${st.lbl}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px">
+            <div class="sc" style="padding:8px 10px">
+              <div class="sc-lbl">Veículo</div>
+              <div style="font-size:12px;font-weight:500;color:var(--text)">${v?v.marca+' '+v.modelo+' '+v.ano:'Sem vínculo'}</div>
+            </div>
+            <div class="sc" style="padding:8px 10px">
+              <div class="sc-lbl">Valor ofertado</div>
+              <div style="font-size:14px;font-weight:600;color:var(--green)">${fmtR(o.valor)}</div>
+            </div>
+            <div class="sc" style="padding:8px 10px">
+              <div class="sc-lbl">Validade</div>
+              <div style="font-size:12px;color:var(--text)">${o.validade||'—'}</div>
+            </div>
+          </div>
+          ${o.obs?`<div style="font-size:11px;color:var(--text2);margin-top:8px;padding:8px 10px;background:var(--bg2);border-radius:7px;border:1px solid var(--border)">${o.obs}</div>`:''}
+          <div style="display:flex;gap:5px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn-sm" onclick="editarOrcamento('${o.id}')">Editar</button>
+            ${o.status==='pendente'?`
+              <button class="btn-sm g" onclick="mudarStatusOrc('${o.id}','aprovado')">✓ Aprovar</button>
+              <button class="btn-sm r" onclick="mudarStatusOrc('${o.id}','recusado')">✗ Recusar</button>
+            `:''}
+            <button class="btn-sm b" onclick="gerarOrcamentoPDF('${o.id}')">Gerar PDF</button>
+            <button class="btn-sm r" onclick="excluirOrc('${o.id}')">×</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function openNovoOrcamento(id){
+  const veiculos=load(KV);const orcs=load(KOR);
+  const o=id?orcs.find(x=>x.id===id):null;
+  const hoje=new Date();const valDefault=new Date(hoje.setDate(hoje.getDate()+15)).toISOString().slice(0,10);
+  openModal('Novo orçamento de venda',`
+    <input type="hidden" id="oid" value="${o?.id||''}"/>
+    <div class="frow"><div class="fg"><div class="fl">Nome do cliente *</div><input id="oc-nome" value="${o?.nomeCliente||''}" placeholder="João da Silva"/></div>
+    <div class="fg"><div class="fl">Telefone</div><input id="oc-tel" value="${o?.telefone||''}" placeholder="(41) 99999-0000"/></div></div>
+    <div class="frow"><div class="fg"><div class="fl">E-mail</div><input id="oc-email" value="${o?.email||''}" placeholder="joao@email.com"/></div>
+    <div class="fg"><div class="fl">CPF / CNPJ</div><input id="oc-doc" value="${o?.documento||''}" placeholder="000.000.000-00"/></div></div>
+    <div class="frow"><div class="fg"><div class="fl">Veículo ofertado</div>
+      <select id="oc-veh">
+        <option value="">Sem vínculo de estoque</option>
+        ${veiculos.filter(v=>v.status==='disponivel').map(v=>`<option value="${v.id}" ${o?.veiculoId===v.id?'selected':''}>${v.marca} ${v.modelo} ${v.ano} — ${fmtR(v.valorVenda)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fg"><div class="fl">Valor ofertado (R$) *</div><input id="oc-valor" type="text" value="${o?.valor||''}" placeholder="58.000"/></div></div>
+    <div class="frow"><div class="fg"><div class="fl">Validade do orçamento</div><input id="oc-val" type="date" value="${o?.validade||valDefault}"/></div>
+    <div class="fg"><div class="fl">Status</div>
+      <select id="oc-st"><option value="pendente" ${!o||o.status==='pendente'?'selected':''}>Pendente</option><option value="aprovado" ${o?.status==='aprovado'?'selected':''}>Aprovado</option><option value="recusado" ${o?.status==='recusado'?'selected':''}>Recusado</option></select>
+    </div></div>
+    <div class="frow full"><div class="fg"><div class="fl">Condições e observações</div>
+      <textarea id="oc-obs" style="min-height:80px" placeholder="Descreva as condições da venda, forma de pagamento, itens incluídos, prazo de entrega...">${o?.obs||''}</textarea>
+    </div></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn-p" onclick="salvarOrcamento()">Salvar orçamento</button>
+      <button class="btn-g" onclick="closeMD()">Cancelar</button>
+    </div>`);
+}
+
+function editarOrcamento(id){openNovoOrcamento(id)}
+
+function salvarOrcamento(){
+  const nome=document.getElementById('oc-nome')?.value.trim();
+  const valor=document.getElementById('oc-valor')?.value.trim();
+  if(!nome){toast('Informe o nome do cliente','#e05252');return}
+  if(!valor){toast('Informe o valor ofertado','#e05252');return}
+  const id=document.getElementById('oid').value||uid();
+  const o={id,nomeCliente:nome,telefone:document.getElementById('oc-tel').value.trim(),
+    email:document.getElementById('oc-email').value.trim(),documento:document.getElementById('oc-doc').value.trim(),
+    veiculoId:document.getElementById('oc-veh').value||null,valor,
+    validade:document.getElementById('oc-val').value,
+    status:document.getElementById('oc-st').value,
+    obs:document.getElementById('oc-obs').value.trim(),
+    criadoEm:new Date().toLocaleDateString('pt-BR')};
+  const lista=load(KOR);const idx=lista.findIndex(x=>x.id===id);
+  if(idx>=0)lista[idx]=o;else lista.unshift(o);
+  save(KOR,lista);closeMD();toast('Orçamento salvo!');showSec('orcamentos');
+}
+
+function mudarStatusOrc(id,status){
+  const lista=load(KOR);const idx=lista.findIndex(x=>x.id===id);
+  if(idx<0)return;lista[idx].status=status;save(KOR,lista);
+  toast(status==='aprovado'?'Orçamento aprovado!':'Orçamento recusado.');showSec('orcamentos');
+}
+
+function excluirOrc(id){
+  if(!confirm('Excluir este orçamento?'))return;
+  save(KOR,load(KOR).filter(x=>x.id!==id));toast('Orçamento excluído');showSec('orcamentos');
+}
+
+function gerarOrcamentoPDF(id){
+  const o=load(KOR).find(x=>x.id===id);if(!o)return;
+  const v=o.veiculoId?load(KV).find(x=>x.id===o.veiculoId):null;
+  const data=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Orçamento</title>
+  <style>body{font-family:Arial,sans-serif;max-width:680px;margin:40px auto;padding:20px;color:#111;line-height:1.7}
+  h1{font-size:20px;text-transform:uppercase;margin-bottom:2px;color:#0a0e1a}
+  .sub{font-size:13px;color:#666;margin-bottom:28px}.section{margin:18px 0}
+  h2{font-size:13px;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;text-transform:uppercase;color:#333}
+  p{font-size:13px;margin:5px 0}.val{font-size:22px;font-weight:bold;color:#16a370;margin:8px 0}
+  .footer{margin-top:50px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+  .ass{text-align:center}.ass-line{border-top:1px solid #333;margin-top:50px;padding-top:6px;font-size:12px}
+  @media print{body{margin:20px}}</style></head><body>
+  <h1>Proposta de Venda — Orçamento</h1>
+  <div class="sub">Emitido em ${data} · Válido até ${o.validade?new Date(o.validade+'T00:00:00').toLocaleDateString('pt-BR'):'—'}</div>
+  <div class="section"><h2>Dados do cliente</h2>
+  <p>Nome: <b>${o.nomeCliente}</b></p>
+  ${o.documento?`<p>CPF/CNPJ: ${o.documento}</p>`:''}
+  ${o.telefone?`<p>Telefone: ${o.telefone}</p>`:''}
+  ${o.email?`<p>E-mail: ${o.email}</p>`:''}
+  </div>
+  ${v?`<div class="section"><h2>Veículo ofertado</h2>
+  <p><b>${v.tipo} ${v.marca} ${v.modelo} ${v.ano}</b></p>
+  <p>Cor: ${v.cor||'—'} · Placa: ${v.placa||'—'} · Km: ${v.km||'—'}</p>
+  <p>Avaria: ${v.avaria||'—'} · Nível: ${v.dano||'—'}</p>
+  ${v.descAvaria?`<p>Descrição: ${v.descAvaria}</p>`:''}
+  </div>`:''}
+  <div class="section"><h2>Valor da proposta</h2>
+  <div class="val">${fmtR(o.valor)}</div>
+  </div>
+  ${o.obs?`<div class="section"><h2>Condições e observações</h2><p>${o.obs}</p></div>`:''}
+  <div class="footer">
+    <div class="ass"><div class="ass-line">Vendedor / Empresa</div></div>
+    <div class="ass"><div class="ass-line">${o.nomeCliente} — Cliente</div></div>
+  </div></body></html>`;
+  const blob=new Blob([html],{type:'text/html'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`orcamento-${o.nomeCliente.replace(/\s+/g,'-')}.html`;a.click();
+  URL.revokeObjectURL(url);toast('Orçamento gerado! Abra e imprima como PDF.');
+}
+
+// ══ SEGURADORA ════════════════════════════════════════════════
+function renderSeguradora(sec){
+  const seguros=load(KSEG);
+  sec.innerHTML=`
+  <div class="row-between">
+    <h3>Veículos Segurados</h3>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <input id="seg-search" placeholder="Buscar placa, segurado, apólice..." style="width:210px;font-size:12px;padding:6px 9px" oninput="filtrarSeguros()"/>
+      <select id="seg-filter-tipo" style="font-size:12px;padding:6px 9px" onchange="filtrarSeguros()">
+        <option value="">Todos os tipos de apólice</option>
+        <option>Compreensivo</option>
+        <option>Terceiros</option>
+        <option>Incêndio e Roubo</option>
+        <option>Total</option>
+        <option>Outros</option>
+      </select>
+      <button class="btn-p" onclick="openNovoSeguro()">+ Cadastrar veículo segurado</button>
+    </div>
+  </div>
+  <div id="seg-lista">${renderListaSeguros(seguros)}</div>`;
+}
+
+function renderListaSeguros(lista){
+  if(!lista.length)return`<div class="empty-state" style="padding:48px 20px">
+    <div style="font-size:32px;margin-bottom:10px">🛡️</div>
+    Nenhum veículo segurado cadastrado ainda.<br/>
+    <span style="font-size:12px">Clique em "+ Cadastrar veículo segurado" para começar.</span>
+  </div>`;
+
+  return`<div style="display:flex;flex-direction:column;gap:10px">`+lista.map(s=>{
+    const tipoColor={
+      'Compreensivo':'var(--green)','Terceiros':'var(--blue)',
+      'Incêndio e Roubo':'var(--amber)','Total':'var(--purple)','Outros':'var(--text3)'
+    };
+    const cor=tipoColor[s.tipoApolice]||'var(--text3)';
+    return`<div style="background:var(--bg1);border:1px solid var(--border);border-radius:11px;overflow:hidden">
+      <!-- Cabeçalho do card -->
+      <div style="padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🚗</div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">${s.placa||'Sem placa'} — ${[s.marca,s.modelo,s.ano].filter(Boolean).join(' ')||'Veículo não identificado'}</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">Chassi: ${s.chassi||'—'}${s.cor?' · Cor: '+s.cor:''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px">
+          ${s.tipoApolice?`<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--bg3);color:${cor};border:1px solid var(--border2)">${s.tipoApolice}</span>`:''}
+          <div style="display:flex;gap:4px">
+            <button class="btn-sm" onclick="openNovoSeguro('${s.id}')">Editar</button>
+            <button class="btn-sm r" onclick="excluirSeguro('${s.id}')">×</button>
+          </div>
+        </div>
+      </div>
+      <!-- Dados em grade -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--border)">
+        ${[
+          ['Segurado',s.nomeSegurado||'—'],
+          ['CPF / CNPJ',s.cpfSegurado||'—'],
+          ['Telefone',s.telSegurado||'—'],
+          ['Seguradora',s.seguradora||'—'],
+          ['Nº da Apólice',s.apolice||'—'],
+          ['Tipo de Cobertura',s.tipoApolice||'—'],
+        ].map(([l,v],i)=>`<div style="padding:10px 14px;border-right:${i%3!==2?'1px solid var(--border)':'none'};border-bottom:${i<3?'1px solid var(--border)':'none'}">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:3px">${l}</div>
+          <div style="font-size:12px;font-weight:500;color:var(--text)">${v}</div>
+        </div>`).join('')}
+      </div>
+      <!-- Vigência + coberturas -->
+      <div style="padding:10px 14px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:2px">Vigência</div>
+            <div style="font-size:12px;color:var(--text)">${s.inicioVigencia||'—'} → ${s.fimVigencia||'—'}</div>
+          </div>
+          ${s.coberturas?`<div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:2px">Coberturas</div>
+            <div style="font-size:12px;color:var(--text2)">${s.coberturas}</div>
+          </div>`:''}
+        </div>
+        ${s.obs?`<div style="font-size:11px;color:var(--text2);background:var(--bg2);border-radius:7px;padding:7px 10px;border:1px solid var(--border);max-width:280px">${s.obs}</div>`:''}
+      </div>
+      <!-- Rodapé -->
+      <div style="padding:6px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:10px;color:var(--text3)">Cadastrado em ${s.criadoEm||'—'}</span>
+        <span style="font-size:10px;color:var(--text3)">ID: ${s.id}</span>
+      </div>
+    </div>`;
+  }).join('')+`</div>`;
+}
+
+function filtrarSeguros(){
+  const q=(document.getElementById('seg-search')?.value||'').toLowerCase();
+  const ft=document.getElementById('seg-filter-tipo')?.value||'';
+  const lista=load(KSEG).filter(s=>{
+    const m=!q||((s.placa||'')+(s.marca||'')+(s.modelo||'')+(s.nomeSegurado||'')+(s.apolice||'')+(s.seguradora||'')).toLowerCase().includes(q);
+    const ft2=!ft||s.tipoApolice===ft;
+    return m&&ft2;
+  });
+  const el=document.getElementById('seg-lista');
+  if(el)el.innerHTML=renderListaSeguros(lista);
+}
+
+function openNovoSeguro(id){
+  const lista=load(KSEG);
+  const s=id?lista.find(x=>x.id===id):null;
+  openModal(s?'Editar veículo segurado':'Cadastrar veículo segurado',`
+    <input type="hidden" id="sid" value="${s?.id||''}"/>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados do veículo</div>
+    <div class="frow three" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">Placa *</div><input id="sg-placa" value="${s?.placa||''}" placeholder="ABC-1234" style="text-transform:uppercase"/></div>
+      <div class="fg"><div class="fl">Marca</div><input id="sg-marca" value="${s?.marca||''}" placeholder="Fiat"/></div>
+      <div class="fg"><div class="fl">Modelo</div><input id="sg-modelo" value="${s?.modelo||''}" placeholder="Strada"/></div>
+    </div>
+    <div class="frow" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">Ano</div><input id="sg-ano" type="number" value="${s?.ano||''}" placeholder="2020"/></div>
+      <div class="fg"><div class="fl">Cor</div><input id="sg-cor" value="${s?.cor||''}" placeholder="Branca"/></div>
+    </div>
+    <div class="frow full" style="margin-bottom:12px">
+      <div class="fg"><div class="fl">Chassi</div><input id="sg-chassi" value="${s?.chassi||''}" placeholder="9BW..."/></div>
+    </div>
+    <div style="height:1px;background:var(--border);margin-bottom:12px"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados do segurado</div>
+    <div class="frow" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">Nome do segurado *</div><input id="sg-nome" value="${s?.nomeSegurado||''}" placeholder="João da Silva"/></div>
+      <div class="fg"><div class="fl">CPF / CNPJ</div><input id="sg-cpf" value="${s?.cpfSegurado||''}" placeholder="000.000.000-00"/></div>
+    </div>
+    <div class="frow full" style="margin-bottom:12px">
+      <div class="fg"><div class="fl">Telefone</div><input id="sg-tel" value="${s?.telSegurado||''}" placeholder="(41) 99999-0000"/></div>
+    </div>
+    <div style="height:1px;background:var(--border);margin-bottom:12px"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados da apólice</div>
+    <div class="frow" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">Seguradora *</div><input id="sg-seg" value="${s?.seguradora||''}" placeholder="Porto Seguro, Bradesco..."/></div>
+      <div class="fg"><div class="fl">Nº da apólice</div><input id="sg-apolice" value="${s?.apolice||''}" placeholder="00123456"/></div>
+    </div>
+    <div class="frow" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">Tipo de apólice *</div>
+        <select id="sg-tipo">
+          <option value="" ${!s?.tipoApolice?'selected':''}>Selecione...</option>
+          <option value="Compreensivo" ${s?.tipoApolice==='Compreensivo'?'selected':''}>Compreensivo</option>
+          <option value="Terceiros" ${s?.tipoApolice==='Terceiros'?'selected':''}>Terceiros</option>
+          <option value="Incêndio e Roubo" ${s?.tipoApolice==='Incêndio e Roubo'?'selected':''}>Incêndio e Roubo</option>
+          <option value="Total" ${s?.tipoApolice==='Total'?'selected':''}>Total</option>
+          <option value="Outros" ${s?.tipoApolice==='Outros'?'selected':''}>Outros</option>
+        </select>
+      </div>
+      <div class="fg"><div class="fl">Vigência</div>
+        <div style="display:flex;gap:5px;align-items:center">
+          <input id="sg-ini" type="date" value="${s?.inicioVigencia||''}" style="flex:1"/>
+          <span style="font-size:11px;color:var(--text3)">até</span>
+          <input id="sg-fim" type="date" value="${s?.fimVigencia||''}" style="flex:1"/>
+        </div>
+      </div>
+    </div>
+    <div class="frow full" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">Coberturas incluídas</div>
+        <input id="sg-cob" value="${s?.coberturas||''}" placeholder="Ex: Colisão, Furto, Incêndio, Danos a terceiros..."/>
+      </div>
+    </div>
+    <div class="frow full" style="margin-bottom:14px">
+      <div class="fg"><div class="fl">Observações</div>
+        <textarea id="sg-obs" style="min-height:60px" placeholder="Contato do corretor, condições especiais, sinistros anteriores...">${s?.obs||''}</textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-p" onclick="salvarSeguro()">Salvar registro</button>
+      <button class="btn-g" onclick="closeMD()">Cancelar</button>
+    </div>`);
+}
+
+function salvarSeguro(){
+  const placa=document.getElementById('sg-placa')?.value.trim().toUpperCase();
+  const nome=document.getElementById('sg-nome')?.value.trim();
+  const seg=document.getElementById('sg-seg')?.value.trim();
+  const tipo=document.getElementById('sg-tipo')?.value;
+  if(!placa){toast('Informe a placa do veículo','#e05252');return}
+  if(!nome){toast('Informe o nome do segurado','#e05252');return}
+  if(!seg){toast('Informe a seguradora','#e05252');return}
+  const id=document.getElementById('sid').value||uid();
+  const s={
+    id,placa,
+    marca:document.getElementById('sg-marca').value.trim(),
+    modelo:document.getElementById('sg-modelo').value.trim(),
+    ano:document.getElementById('sg-ano').value,
+    cor:document.getElementById('sg-cor').value.trim(),
+    chassi:document.getElementById('sg-chassi').value.trim(),
+    nomeSegurado:nome,
+    cpfSegurado:document.getElementById('sg-cpf').value.trim(),
+    telSegurado:document.getElementById('sg-tel').value.trim(),
+    seguradora:seg,
+    apolice:document.getElementById('sg-apolice').value.trim(),
+    tipoApolice:tipo,
+    inicioVigencia:document.getElementById('sg-ini').value,
+    fimVigencia:document.getElementById('sg-fim').value,
+    coberturas:document.getElementById('sg-cob').value.trim(),
+    obs:document.getElementById('sg-obs').value.trim(),
+    criadoEm:new Date().toLocaleDateString('pt-BR')
+  };
+  const lista=load(KSEG);const idx=lista.findIndex(x=>x.id===id);
+  if(idx>=0)lista[idx]=s;else lista.unshift(s);
+  save(KSEG,lista);closeMD();toast('Veículo segurado cadastrado!');showSec('seguradora');
+}
+
+function excluirSeguro(id){
+  if(!confirm('Excluir este registro de seguro?'))return;
+  save(KSEG,load(KSEG).filter(x=>x.id!==id));
+  toast('Registro excluído');showSec('seguradora');
+}
+
+// ══ INIT ══════════════════════════════════════════════════════
+const sess=getSess();
+if(sess){CU=sess;document.getElementById('login-wrap').style.display='none';document.getElementById('app').style.display='flex';initApp()}
+</script>
+</body>
+</html>
