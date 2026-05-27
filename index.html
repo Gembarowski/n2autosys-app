@@ -1172,7 +1172,23 @@ function exportarExcel(){
 }
 
 // ══ USUÁRIOS ══════════════════════════════════════════════════
-function renderUsuarios(sec){
+async function renderUsuarios(sec){
+  if(CU?.fromServer){
+    try{
+      const data=await apiRequest('GET','/api/usuarios');
+      if(data?.usuarios){
+        // Mescla com usuário local para não perder o admin
+        const serverUsers=data.usuarios.map(u=>({
+          id:u.id, nome:u.nome, username:u.username,
+          email:u.email||'', cargo:u.cargo,
+          telefone:u.telefone||'', ativo:u.ativo,
+          criadoEm:u.criado_em?new Date(u.criado_em).toLocaleDateString('pt-BR'):'—',
+          fromServer:true
+        }));
+        save(KU, serverUsers);
+      }
+    }catch(e){console.warn('Usando cache local de usuários');}
+  }
   const users=getUsers();
   sec.innerHTML=`<div class="row-between"><h3>Usuários do sistema</h3><button class="btn-p" onclick="openCadU()">+ Novo usuário</button></div>
   <div class="card"><div class="card-title">Usuários cadastrados <span style="font-size:11px;font-weight:400;color:var(--text3)">${users.length}</span></div>
@@ -1205,19 +1221,52 @@ function openCadU(id){
     <div class="fg"><div class="fl">Telefone</div><input id="cu-t" value="${u?.telefone||''}" placeholder="(41) 99999-0000"/></div></div>
     <div style="display:flex;gap:8px"><button class="btn-p" onclick="salvarU()">Salvar</button><button class="btn-g" onclick="closeMD()">Cancelar</button></div>`);
 }
-function salvarU(){
-  const nome=document.getElementById('cu-n').value.trim(),username=document.getElementById('cu-u').value.trim().toLowerCase();
-  const pass=document.getElementById('cu-p').value,id=document.getElementById('cu-id').value||uid();
+async function salvarU(){
+  const nome=document.getElementById('cu-n').value.trim();
+  const username=document.getElementById('cu-u').value.trim().toLowerCase();
+  const senha=document.getElementById('cu-p').value;
+  const editId=document.getElementById('cu-id').value;
   if(!nome||!username){toast('Preencha nome e usuário','#e05252');return}
+  if(!editId&&!senha){toast('Informe a senha','#e05252');return}
+
+  const uData={
+    nome, username,
+    email:document.getElementById('cu-e').value.trim(),
+    cargo:document.getElementById('cu-c').value,
+    telefone:document.getElementById('cu-t').value.trim(),
+    ...(senha?{senha}:{})
+  };
+
+  if(CU?.fromServer){
+    try{
+      const resp=editId
+        ? await apiRequest('PUT','/api/usuarios/'+editId,uData)
+        : await apiRequest('POST','/api/usuarios',uData);
+      if(resp?.usuario){
+        toast('Usuário salvo!');closeMD();showSec('usuarios');return;
+      }
+      if(resp?.error){toast(resp.error,'#e05252');return;}
+    }catch(e){toast('Erro de conexão — salvando localmente','#f5a623');}
+  }
+  // Fallback local
+  const id=editId||uid();
   const users=getUsers();const existing=users.find(x=>x.id===id);
-  const u={id,nome,username,password:pass||(existing?.password||''),email:document.getElementById('cu-e').value.trim(),cargo:document.getElementById('cu-c').value,telefone:document.getElementById('cu-t').value.trim(),criadoEm:existing?.criadoEm||new Date().toLocaleDateString('pt-BR')};
+  const u={id,nome,username,password:senha||(existing?.password||''),
+    email:uData.email,cargo:uData.cargo,telefone:uData.telefone,
+    criadoEm:existing?.criadoEm||new Date().toLocaleDateString('pt-BR')};
   if(!u.password){toast('Informe a senha','#e05252');return}
   const idx=users.findIndex(x=>x.id===id);if(idx>=0)users[idx]=u;else users.push(u);
   save(KU,users);closeMD();toast('Usuário salvo!');showSec('usuarios');
 }
-function excluirU(id){
+async function excluirU(id){
   if(id===CU?.id){toast('Não pode excluir seu próprio usuário','#e05252');return}
-  if(!confirm('Excluir usuário?'))return;save(KU,load(KU).filter(x=>x.id!==id));toast('Excluído');showSec('usuarios');
+  if(!confirm('Excluir usuário?'))return;
+  if(CU?.fromServer){
+    try{await apiRequest('DELETE','/api/usuarios/'+id);}
+    catch(e){console.warn('Erro ao excluir no servidor');}
+  }
+  save(KU,load(KU).filter(x=>x.id!==id));
+  toast('Usuário excluído');showSec('usuarios');
 }
 
 // ══ PERFIL ════════════════════════════════════════════════════
