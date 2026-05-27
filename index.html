@@ -270,7 +270,7 @@ const ROLES={
   financeiro:{label:'Financeiro',  color:'#e05252',bg:'#2a0f0f',nav:['vendas','orcamentos','relatorio','backup','perfil']},
   visualizador:{label:'Visualizador',color:'#8899b0',bg:'#1e2535',nav:['estoque','relatorio','perfil']},
 };
-const NAV_LABELS={estoque:'Estoque',cadastro:'+ Veículo',fotos:'Fotos',documentos:'Documentos',vendas:'Vendas',vistoria:'⚡ Vistoria',vendedores:'Vendedores',anuncios:'Anúncios',orcamentos:'Orçamentos',seguradora:'Seguradora',relatorio:'Relatório',backup:'💾 Backup',usuarios:'Usuários',perfil:'Meu Perfil'};
+const NAV_LABELS={estoque:'Estoque',cadastro:'+ Veículo',fotos:'Fotos',documentos:'Documentos',vendas:'Vendas',vistoria:'⚡ Vistoria',vendedores:'Vendedores',anuncios:'Anúncios',orcamentos:'Orçamentos',seguradora:'Associação',relatorio:'Relatório',backup:'💾 Backup',usuarios:'Usuários',perfil:'Meu Perfil'};
 const NAV_ORDER=['estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','usuarios','perfil'];
 
 // ══ SESSION ════════════════════════════════════════════════════
@@ -826,29 +826,86 @@ function renderFotos(sec){
       <option value="">— Selecione um veículo —</option>
       ${vs.map(v=>`<option value="${v.id}">${v.marca} ${v.modelo} ${v.ano}${v.placa?' — '+v.placa:''}</option>`).join('')}
     </select>
-    <label class="btn-p" style="cursor:pointer">+ Foto<input type="file" id="foto-inp" accept="image/*" multiple style="display:none" onchange="uploadFotos()"/></label>
-  </div><div id="foto-area"><div class="empty-state">Selecione um veículo para ver as fotos</div></div>`;
+    <label class="btn-p" style="cursor:pointer;display:flex;align-items:center;gap:6px">
+      📷 + Fotos
+      <input type="file" id="foto-inp" accept="image/jpeg,image/png,image/webp" multiple style="display:none" onchange="uploadFotos()"/>
+    </label>
+  </div>
+  <div id="foto-area"><div class="empty-state">Selecione um veículo para ver as fotos</div></div>`;
 }
-function loadFotosVeh(vid){
+async function loadFotosVeh(vid){
   const sel=document.getElementById('fvs');if(sel&&vid)sel.value=vid;
   const area=document.getElementById('foto-area');if(!area||!vid)return;
-  const fotos=load(KF).filter(f=>f.veiculoId===vid);
-  area.innerHTML=`<div class="card"><div class="card-title">Fotos <span style="font-size:11px;font-weight:400;color:var(--text3)">${fotos.length} foto(s)</span></div>
-    <div class="photo-grid">${fotos.map(f=>`<div style="position:relative"><img src="${f.data}" class="photo-thumb" onclick="verFoto('${f.id}')"/><button style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;border-radius:4px;color:white;font-size:11px;cursor:pointer;padding:2px 6px" onclick="excluirFoto('${f.id}','${vid}')">×</button></div>`).join('')}</div>
-    <p style="font-size:11px;color:var(--text3);margin-top:8px">A primeira foto é usada como capa no estoque.</p></div>`;
+  area.innerHTML=`<div class="empty-state">Carregando fotos...</div>`;
+  try{
+    if(CU?.fromServer){
+      const data=await apiRequest('GET',`/api/cloudinary/fotos/${vid}`);
+      const fotos=data?.fotos||[];
+      renderGradeFotos(area,fotos,vid,true);
+    } else {
+      const fotos=load(KF).filter(f=>f.veiculoId===vid);
+      renderGradeFotos(area,fotos,vid,false);
+    }
+  }catch(e){area.innerHTML=`<div class="empty-state">Erro ao carregar fotos</div>`;}
 }
-function uploadFotos(){
-  const inp=document.getElementById('foto-inp');const vid=document.getElementById('fvs')?.value;
+function renderGradeFotos(area,fotos,vid,isServer){
+  const grid=fotos.length?`<div class="photo-grid">${fotos.map(f=>{
+    const src=isServer?f.url:f.data;
+    return `<div style="position:relative">
+      <img src="${src}" class="photo-thumb" onclick="verFotoURL('${src}','${f.nome||'Foto'}')" style="cursor:pointer"/>
+      <button style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;border-radius:4px;color:white;font-size:11px;cursor:pointer;padding:2px 7px" onclick="excluirFoto('${f.id}','${vid}',${isServer})">×</button>
+    </div>`;
+  }).join('')}</div>`:`<div style="color:var(--text3);font-size:12px;padding:4px">Nenhuma foto cadastrada</div>`;
+  area.innerHTML=`<div class="card">
+    <div class="card-title">Fotos <span style="font-size:11px;font-weight:400;color:var(--text3)">${fotos.length} foto(s)</span></div>
+    ${grid}
+    <p style="font-size:11px;color:var(--text3);margin-top:8px">A primeira foto é usada como capa no estoque. Formatos: JPG, PNG, WebP (máx. 15MB).</p>
+  </div>`;
+}
+async function uploadFotos(){
+  const inp=document.getElementById('foto-inp');
+  const vid=document.getElementById('fvs')?.value;
   if(!vid){toast('Selecione um veículo','#e05252');return}
-  Array.from(inp.files).forEach(f=>{
-    const r=new FileReader();r.onload=e=>{
-      try{const lista=load(KF);lista.push({id:uid(),veiculoId:vid,data:e.target.result,nome:f.name});save(KF,lista);loadFotosVeh(vid);toast('Foto salva!')}
-      catch{toast('Foto muito grande','#e05252')}
-    };r.readAsDataURL(f);
-  });inp.value='';
+  if(!inp.files.length)return;
+  if(CU?.fromServer){
+    const files=Array.from(inp.files);
+    toast(`Enviando ${files.length} foto(s)...`);
+    const token=localStorage.getItem('ag4_jwt')||CU?.token;
+    const tenant=getTenantSlug();
+    const fd=new FormData();
+    files.forEach(f=>fd.append('fotos',f));
+    try{
+      const resp=await fetch(`${API_URL}/api/cloudinary/fotos/${vid}`,{
+        method:'POST',
+        headers:{'X-Tenant-Slug':tenant,'Authorization':'Bearer '+token},
+        body:fd
+      });
+      const data=await resp.json();
+      if(resp.ok){toast(`${data.total} foto(s) enviada(s)! ✓`);loadFotosVeh(vid);}
+      else toast(data.error||'Erro no upload','#e05252');
+    }catch(e){toast('Erro ao enviar fotos','#e05252');}
+  } else {
+    Array.from(inp.files).forEach(f=>{
+      const r=new FileReader();r.onload=e=>{
+        try{const lista=load(KF);lista.push({id:uid(),veiculoId:vid,data:e.target.result,nome:f.name});save(KF,lista);loadFotosVeh(vid);toast('Foto salva!')}
+        catch{toast('Foto muito grande para armazenamento local','#e05252')}
+      };r.readAsDataURL(f);
+    });
+  }
+  inp.value='';
 }
-function verFoto(id){const f=load(KF).find(x=>x.id===id);if(!f)return;openModal(f.nome||'Foto',`<img src="${f.data}" style="width:100%;border-radius:8px;border:1px solid var(--border)"/>`)}
-function excluirFoto(id,vid){if(!confirm('Remover?'))return;save(KF,load(KF).filter(f=>f.id!==id));toast('Foto removida');loadFotosVeh(vid)}
+function verFotoURL(src,nome){openModal(nome,`<img src="${src}" style="width:100%;border-radius:8px;border:1px solid var(--border)"/>`);}
+function verFoto(id){const f=load(KF).find(x=>x.id===id);if(!f)return;verFotoURL(f.data,f.nome||'Foto');}
+async function excluirFoto(id,vid,isServer){
+  if(!confirm('Remover foto?'))return;
+  if(isServer){
+    const data=await apiRequest('DELETE',`/api/cloudinary/foto/${id}`);
+    if(data?.message||!data?.error){toast('Foto removida');loadFotosVeh(vid);}
+    else toast(data.error||'Erro ao remover','#e05252');
+  } else {
+    save(KF,load(KF).filter(f=>f.id!==id));toast('Foto removida');loadFotosVeh(vid);
+  }
+}
 
 // ══ DOCUMENTOS ════════════════════════════════════════════════
 const DOCS_PAD=['CRV (Certificado de Registro)','CRLV (Licenciamento)','Laudo de vistoria','Nota fiscal de compra','Laudo cautelar','Termo de responsabilidade','Autorização Detran','Contrato Social','Procuração'];
@@ -869,7 +926,15 @@ function loadDocsVeh(vid){
   const faltando=DOCS_PAD.filter(d=>!docs.map(x=>x.nome).includes(d));
   area.innerHTML=`<div class="card"><div class="card-title">Documentos</div>
     ${docs.length===0?'<div style="color:var(--text3);font-size:12px;padding:4px">Nenhum documento ainda</div>':
-    '<div class="doc-list">'+docs.map(d=>`<div class="doc-item"><span style="font-size:12px;color:var(--text);flex:1">${d.nome}</span><span style="font-size:11px;color:var(--text3);flex:1">${d.obs||''}</span>${d.pdfNome?'<span style="font-size:10px;color:var(--red);background:var(--redbg);padding:1px 6px;border-radius:6px;border:1px solid #4a1f1f">📄 '+d.pdfNome+'</span>':''}<span class="ds ${d.status==='ok'?'ds-ok':d.status==='pendente'?'ds-pend':'ds-miss'}">${d.status==='ok'?'Recebido':d.status==='pendente'?'Pendente':'Faltando'}</span><button class="btn-sm r" onclick="excluirDoc('${d.id}','${vid}')">×</button></div>`).join('')+'</div>'}
+    '<div class="doc-list">'+docs.map(d=>`<div class="doc-item">
+      <span style="font-size:12px;color:var(--text);flex:1">${d.nome}</span>
+      <span style="font-size:11px;color:var(--text3);flex:1">${d.obs||''}</span>
+      ${d.pdfUrl
+        ?`<a href="${d.pdfUrl}" target="_blank" style="font-size:10px;color:var(--blue);background:var(--bluebg);padding:1px 8px;border-radius:6px;border:1px solid #1a3a5a;text-decoration:none">📄 Ver PDF</a>`
+        :d.pdfNome?`<span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:1px 6px;border-radius:6px">📄 ${d.pdfNome}</span>`:''}
+      <span class="ds ${d.status==='ok'?'ds-ok':d.status==='pendente'?'ds-pend':'ds-miss'}">${d.status==='ok'?'Recebido':d.status==='pendente'?'Pendente':'Faltando'}</span>
+      <button class="btn-sm r" onclick="excluirDoc('${d.id}','${vid}')">×</button>
+    </div>`).join('')+'</div>'}
     ${faltando.length?`<div style="margin-top:9px;font-size:11px;color:var(--text3)">Faltando: ${faltando.map(f=>`<span class="tag-chip">${f}</span>`).join(' ')}</div>`:''}
   </div>`;
 }
@@ -888,14 +953,35 @@ function addDocModal(){
         <input type="file" id="md-pdf" accept=".pdf,application/pdf" style="display:none" onchange="document.getElementById('md-pdf-name').textContent=this.files[0]?this.files[0].name:''"/>
       </label>
       <div id="md-pdf-name" style="font-size:11px;color:var(--text2);margin-top:4px"></div>
+      ${CU?.fromServer?'<div style="font-size:10px;color:var(--text3);margin-top:3px">✓ PDF será enviado para a nuvem</div>':''}
     </div>
     <div style="display:flex;gap:8px"><button class="btn-p" onclick="salvarDoc('${vid}')">Salvar</button><button class="btn-g" onclick="closeMD()">Cancelar</button></div>`);
 }
-function salvarDoc(vid){
+async function salvarDoc(vid){
   const tipo=document.getElementById('md-n').value,outro=document.getElementById('md-o').value.trim();
   const pdfInp=document.getElementById('md-pdf');
-  const pdfNome=pdfInp&&pdfInp.files[0]?pdfInp.files[0].name:'';
-  const doc={id:uid(),veiculoId:vid,nome:tipo==='Outro'&&outro?outro:tipo,status:document.getElementById('md-s').value,obs:document.getElementById('md-ob').value.trim(),pdfNome};
+  const pdfFile=pdfInp?.files[0]||null;
+  const nomeDoc=tipo==='Outro'&&outro?outro:tipo;
+  let pdfUrl=null,pdfNome=pdfFile?pdfFile.name:'';
+  if(pdfFile&&CU?.fromServer){
+    toast('Enviando PDF...');
+    const token=localStorage.getItem('ag4_jwt')||CU?.token;
+    const tenant=getTenantSlug();
+    const fd=new FormData();
+    fd.append('pdf',pdfFile);
+    fd.append('nomeDoc',nomeDoc);
+    try{
+      const resp=await fetch(`${API_URL}/api/cloudinary/pdf/${vid}`,{
+        method:'POST',
+        headers:{'X-Tenant-Slug':tenant,'Authorization':'Bearer '+token},
+        body:fd
+      });
+      const data=await resp.json();
+      if(resp.ok){pdfUrl=data.url;pdfNome=data.nome;}
+      else{toast(data.error||'Erro ao enviar PDF','#e05252');return;}
+    }catch(e){toast('Erro ao enviar PDF','#e05252');return;}
+  }
+  const doc={id:uid(),veiculoId:vid,nome:nomeDoc,status:document.getElementById('md-s').value,obs:document.getElementById('md-ob').value.trim(),pdfNome,pdfUrl};
   const lista=load(KD);lista.push(doc);save(KD,lista);closeMD();toast('Documento salvo!');loadDocsVeh(vid);
 }
 function excluirDoc(id,vid){if(!confirm('Remover?'))return;save(KD,load(KD).filter(d=>d.id!==id));toast('Removido');loadDocsVeh(vid)}
@@ -1784,9 +1870,9 @@ function renderSeguradora(sec){
   const seguros=load(KSEG);
   sec.innerHTML=`
   <div class="row-between">
-    <h3>Veículos Segurados</h3>
+    <h3>Veículos Associados</h3>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <input id="seg-search" placeholder="Buscar placa, segurado, apólice..." style="width:210px;font-size:12px;padding:6px 9px" oninput="filtrarSeguros()"/>
+      <input id="seg-search" placeholder="Buscar placa, associado, apólice..." style="width:210px;font-size:12px;padding:6px 9px" oninput="filtrarSeguros()"/>
       <select id="seg-filter-tipo" style="font-size:12px;padding:6px 9px" onchange="filtrarSeguros()">
         <option value="">Todos os tipos de apólice</option>
         <option>Compreensivo</option>
@@ -1795,7 +1881,7 @@ function renderSeguradora(sec){
         <option>Total</option>
         <option>Outros</option>
       </select>
-      <button class="btn-p" onclick="openNovoSeguro()">+ Cadastrar veículo segurado</button>
+      <button class="btn-p" onclick="openNovoSeguro()">+ Cadastrar veículo associado</button>
     </div>
   </div>
   <div id="seg-lista">${renderListaSeguros(seguros)}</div>`;
@@ -1804,8 +1890,8 @@ function renderSeguradora(sec){
 function renderListaSeguros(lista){
   if(!lista.length)return`<div class="empty-state" style="padding:48px 20px">
     <div style="font-size:32px;margin-bottom:10px">🛡️</div>
-    Nenhum veículo segurado cadastrado ainda.<br/>
-    <span style="font-size:12px">Clique em "+ Cadastrar veículo segurado" para começar.</span>
+    Nenhum veículo associado cadastrado ainda.<br/>
+    <span style="font-size:12px">Clique em "+ Cadastrar veículo associado" para começar.</span>
   </div>`;
 
   return`<div style="display:flex;flex-direction:column;gap:10px">`+lista.map(s=>{
@@ -1835,10 +1921,10 @@ function renderListaSeguros(lista){
       <!-- Dados em grade -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--border)">
         ${[
-          ['Segurado',s.nomeSegurado||'—'],
+          ['Associado',s.nomeSegurado||'—'],
           ['CPF / CNPJ',s.cpfSegurado||'—'],
           ['Telefone',s.telSegurado||'—'],
-          ['Seguradora',s.seguradora||'—'],
+          ['Associação',s.seguradora||'—'],
           ['Nº da Apólice',s.apolice||'—'],
           ['Tipo de Cobertura',s.tipoApolice||'—'],
         ].map(([l,v],i)=>`<div style="padding:10px 14px;border-right:${i%3!==2?'1px solid var(--border)':'none'};border-bottom:${i<3?'1px solid var(--border)':'none'}">
@@ -1884,7 +1970,7 @@ function filtrarSeguros(){
 function openNovoSeguro(id){
   const lista=load(KSEG);
   const s=id?lista.find(x=>x.id===id):null;
-  openModal(s?'Editar veículo segurado':'Cadastrar veículo segurado',`
+  openModal(s?'Editar veículo associado':'Cadastrar veículo associado',`
     <input type="hidden" id="sid" value="${s?.id||''}"/>
     <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados do veículo</div>
     <div class="frow three" style="margin-bottom:10px">
@@ -1900,9 +1986,9 @@ function openNovoSeguro(id){
       <div class="fg"><div class="fl">Chassi</div><input id="sg-chassi" value="${s?.chassi||''}" placeholder="9BW..."/></div>
     </div>
     <div style="height:1px;background:var(--border);margin-bottom:12px"></div>
-    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados do segurado</div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados do associado</div>
     <div class="frow" style="margin-bottom:10px">
-      <div class="fg"><div class="fl">Nome do segurado *</div><input id="sg-nome" value="${s?.nomeSegurado||''}" placeholder="João da Silva"/></div>
+      <div class="fg"><div class="fl">Nome do associado *</div><input id="sg-nome" value="${s?.nomeSegurado||''}" placeholder="João da Silva"/></div>
       <div class="fg"><div class="fl">CPF / CNPJ</div><input id="sg-cpf" value="${s?.cpfSegurado||''}" placeholder="000.000.000-00"/></div>
     </div>
     <div class="frow full" style="margin-bottom:12px">
@@ -1911,7 +1997,7 @@ function openNovoSeguro(id){
     <div style="height:1px;background:var(--border);margin-bottom:12px"></div>
     <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Dados da apólice</div>
     <div class="frow" style="margin-bottom:10px">
-      <div class="fg"><div class="fl">Seguradora *</div><input id="sg-seg" value="${s?.seguradora||''}" placeholder="Porto Seguro, Bradesco..."/></div>
+      <div class="fg"><div class="fl">Associação *</div><input id="sg-seg" value="${s?.seguradora||''}" placeholder="Nome da associação..."/></div>
       <div class="fg"><div class="fl">Nº da apólice</div><input id="sg-apolice" value="${s?.apolice||''}" placeholder="00123456"/></div>
     </div>
     <div class="frow" style="margin-bottom:10px">
@@ -1955,8 +2041,8 @@ function salvarSeguro(){
   const seg=document.getElementById('sg-seg')?.value.trim();
   const tipo=document.getElementById('sg-tipo')?.value;
   if(!placa){toast('Informe a placa do veículo','#e05252');return}
-  if(!nome){toast('Informe o nome do segurado','#e05252');return}
-  if(!seg){toast('Informe a seguradora','#e05252');return}
+  if(!nome){toast('Informe o nome do associado','#e05252');return}
+  if(!seg){toast('Informe a associação','#e05252');return}
   const id=document.getElementById('sid').value||uid();
   const s={
     id,placa,
@@ -1979,7 +2065,7 @@ function salvarSeguro(){
   };
   const lista=load(KSEG);const idx=lista.findIndex(x=>x.id===id);
   if(idx>=0)lista[idx]=s;else lista.unshift(s);
-  save(KSEG,lista);closeMD();toast('Veículo segurado cadastrado!');showSec('seguradora');
+  save(KSEG,lista);closeMD();toast('Veículo associado cadastrado!');showSec('seguradora');
 }
 
 function excluirSeguro(id){
