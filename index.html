@@ -292,13 +292,9 @@ function getUsers(){
 // ── URL do servidor N2 AutoSYS ────────────────────────────────────
 const API_URL='https://n2autosys-backend.onrender.com';
 
-// ── Detecta o tenant pelo subdomínio ou usa o padrão ─────────────
+// ── Slug fixo para esta empresa ───────────────────────────────────
 function getTenantSlug(){
-  const host=window.location.hostname;
-  const parts=host.split('.');
-  if(parts.length>=3&&parts[0]!=='www')return parts[0];
-  // fallback: pega do localStorage (para uso local/testes)
-  localStorage.setItem('ag4_tenant','n2autosys_nickel'); return 'n2autosys_nickel';
+  return 'n2autosys_nickel';
 }
 
 async function doLogin(){
