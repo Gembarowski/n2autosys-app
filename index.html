@@ -975,7 +975,7 @@ async function excluirFoto(id,vid,isServer){
 }
 
 // ══ DOCUMENTOS ════════════════════════════════════════════════
-const DOCS_PAD=['CRV (Certificado de Registro)','CRLV (Licenciamento)','Laudo de vistoria','Nota fiscal de compra','Laudo cautelar','Termo de responsabilidade','Autorização Detran','Contrato Social','Procuração'];
+const DOCS_PAD=['CRV (Certificado de Registro)','CRLV (Licenciamento)','ATPV (Autorização de Transferência)','Laudo de vistoria','Nota fiscal de compra','Laudo cautelar','Termo de responsabilidade','Autorização Detran','Contrato Social','Procuração'];
 function renderDocumentos(sec){
   const vs=load(KV);
   sec.innerHTML=`<div class="sel-row">
@@ -1012,7 +1012,7 @@ function addDocModal(){
   const vid=document.getElementById('dvs')?.value;
   if(!vid){toast('Selecione um veículo','#e05252');return}
   openModal('Adicionar documento',`
-    <div class="fg" style="margin-bottom:10px"><div class="fl">Tipo</div><select id="md-n"><option>CRV (Certificado de Registro)</option><option>CRLV (Licenciamento)</option><option>Laudo de vistoria</option><option>Nota fiscal de compra</option><option>Laudo cautelar</option><option>Termo de responsabilidade</option><option>Autorização Detran</option><option>Contrato Social</option><option>Procuração</option><option>Outro</option></select></div>
+    <div class="fg" style="margin-bottom:10px"><div class="fl">Tipo</div><select id="md-n"><option>CRV (Certificado de Registro)</option><option>CRLV (Licenciamento)</option><option>ATPV (Autorização de Transferência)</option><option>Laudo de vistoria</option><option>Nota fiscal de compra</option><option>Laudo cautelar</option><option>Termo de responsabilidade</option><option>Autorização Detran</option><option>Contrato Social</option><option>Procuração</option><option>Outro</option></select></div>
     <div class="fg" style="margin-bottom:10px"><div class="fl">Nome personalizado (se Outro)</div><input id="md-o" placeholder="Nome..."/></div>
     <div class="fg" style="margin-bottom:10px"><div class="fl">Status</div><select id="md-s"><option value="ok">Recebido</option><option value="pendente">Pendente</option><option value="faltando">Faltando</option></select></div>
     <div class="fg" style="margin-bottom:10px"><div class="fl">Observação</div><input id="md-ob" placeholder="Ex: aguardando despachante..."/></div>
