@@ -488,7 +488,15 @@ async function renderEstoque(sec){
   if(CU?.fromServer){
     try{
       const data=await apiRequest('GET','/api/veiculos');
-      if(data?.veiculos){save(KV,data.veiculos);}
+      if(data?.veiculos){
+        // Preserva campos locais (capaId, capaUrl) ao mesclar com dados do servidor
+        const local=load(KV);
+        const merged=data.veiculos.map(sv=>{
+          const lv=local.find(x=>x.id===sv.id);
+          return lv?{...sv,capaId:lv.capaId||null,capaUrl:lv.capaUrl||null}:sv;
+        });
+        save(KV,merged);
+      }
       const sdata=await apiRequest('GET','/api/vendedores');
       if(sdata?.vendedores){save(KS,sdata.vendedores);}
       const vdata=await apiRequest('GET','/api/vendas');
