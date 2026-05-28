@@ -774,7 +774,7 @@ function renderCadastro(sec){
     <div class="fg"><div class="fl">Placa</div><input id="f-placa" placeholder="ABC-1234"/></div>
     <div class="fg"><div class="fl">Km</div><input id="f-km" placeholder="87.000"/></div></div>
     <div class="frow"><div class="fg"><div class="fl">Chassi</div><input id="f-chassi" placeholder="9BW..."/></div>
-    <div class="fg"><div class="fl">RENAVAN</div><input id="f-renavan" placeholder="00000000000" maxlength="11"/></div></div>
+    <div class="fg"><div class="fl">RENAVAM</div><input id="f-renavam" placeholder="00000000000" maxlength="11"/></div></div>
     <div class="frow"><div class="fg"><div class="fl">Local no pátio</div><input id="f-local" placeholder="Pátio 1 / Vaga 12"/></div>
     <div class="fg"><div class="fl">Nível de dano</div><select id="f-dano"><option>Pequena Monta</option><option>Média Monta</option><option>Grande Monta</option></select></div></div>
     <div class="frow full"><div class="fg"><div class="fl">Tipo de avaria <span style="font-size:10px;color:var(--text3)">(selecione uma ou mais)</span></div>
@@ -798,7 +798,7 @@ async function salvarVeh(){
     modelo:document.getElementById('f-modelo').value.trim(),ano:document.getElementById('f-ano').value,
     cor:document.getElementById('f-cor').value.trim(),placa:document.getElementById('f-placa').value.trim().toUpperCase(),
     km:document.getElementById('f-km').value.trim(),chassi:document.getElementById('f-chassi').value.trim(),
-    local_patio:document.getElementById('f-local').value.trim(),renavan:document.getElementById('f-renavan').value.trim(),avaria:getAvarias().join(', ')||'Outros danos',
+    local_patio:document.getElementById('f-local').value.trim(),renavam:document.getElementById('f-renavam').value.trim(),avaria:getAvarias().join(', ')||'Outros danos',
     nivel_dano:document.getElementById('f-dano').value,desc_avaria:document.getElementById('f-descavaria').value.trim(),
     valor_compra:document.getElementById('f-compra').value.trim(),valor_venda:document.getElementById('f-venda').value.trim(),
     status:document.getElementById('f-status').value,obs:document.getElementById('f-obs').value.trim()};
@@ -842,7 +842,7 @@ function editVeh(id){
     document.getElementById('f-placa').value=v.placa||'';
     document.getElementById('f-km').value=v.km||'';
     document.getElementById('f-chassi').value=v.chassi||'';
-    document.getElementById('f-renavan').value=v.renavan||'';
+    document.getElementById('f-renavam').value=v.renavam||'';
     document.getElementById('f-local').value=v.local||'';
     setTimeout(()=>setAvarias(v.avaria?v.avaria.split(', ').map(s=>s.trim()):[]),50);
     document.getElementById('f-dano').value=v.dano||'Pequena Monta';
@@ -965,6 +965,9 @@ function loadDocsVeh(vid){
     '<div class="doc-list">'+docs.map(d=>`<div class="doc-item">
       <span style="font-size:12px;color:var(--text);flex:1">${d.nome}</span>
       <span style="font-size:11px;color:var(--text3);flex:1">${d.obs||''}</span>
+      ${d.fotoUrl
+        ?`<span onclick="verFotoURL('${d.fotoUrl}','${d.nome}')" style="font-size:10px;color:var(--amber);background:rgba(232,160,32,0.08);padding:1px 8px;border-radius:6px;border:1px solid rgba(232,160,32,0.25);cursor:pointer">📷 Ver foto</span>`
+        :''}
       ${d.pdfUrl
         ?`<a href="${d.pdfUrl}" target="_blank" style="font-size:10px;color:var(--blue);background:var(--bluebg);padding:1px 8px;border-radius:6px;border:1px solid #1a3a5a;text-decoration:none">📄 Ver PDF</a>`
         :d.pdfNome?`<span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:1px 6px;border-radius:6px">📄 ${d.pdfNome}</span>`:''}
@@ -982,23 +985,65 @@ function addDocModal(){
     <div class="fg" style="margin-bottom:10px"><div class="fl">Nome personalizado (se Outro)</div><input id="md-o" placeholder="Nome..."/></div>
     <div class="fg" style="margin-bottom:10px"><div class="fl">Status</div><select id="md-s"><option value="ok">Recebido</option><option value="pendente">Pendente</option><option value="faltando">Faltando</option></select></div>
     <div class="fg" style="margin-bottom:10px"><div class="fl">Observação</div><input id="md-ob" placeholder="Ex: aguardando despachante..."/></div>
-    <div class="fg" style="margin-bottom:14px">
-      <div class="fl">Anexar PDF (opcional)</div>
+    <div class="fg" style="margin-bottom:6px">
+      <div class="fl">Anexar arquivo <span style="font-size:10px;color:var(--text3)">(opcional)</span></div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <label id="tab-foto" onclick="switchDocTab('foto')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;background:var(--amber);color:var(--bg);border:1px solid var(--amber)">📷 Foto do documento</label>
+        <label id="tab-pdf" onclick="switchDocTab('pdf')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;background:var(--bg2);color:var(--text2);border:1px solid var(--border)">📄 Arquivo PDF</label>
+      </div>
+    </div>
+    <div id="doc-tab-foto" style="margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2)">
+        📷 Selecionar foto
+        <input type="file" id="md-foto" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="document.getElementById('md-foto-name').textContent=this.files[0]?this.files[0].name:''"/>
+      </label>
+      <div id="md-foto-name" style="font-size:11px;color:var(--text2);margin-top:4px"></div>
+      ${CU?.fromServer?'<div style="font-size:10px;color:var(--text3);margin-top:3px">✓ Foto será enviada para a nuvem</div>':''}    </div>
+    <div id="doc-tab-pdf" style="margin-bottom:14px;display:none">
       <label style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--text2)">
         📄 Selecionar arquivo PDF
         <input type="file" id="md-pdf" accept=".pdf,application/pdf" style="display:none" onchange="document.getElementById('md-pdf-name').textContent=this.files[0]?this.files[0].name:''"/>
       </label>
       <div id="md-pdf-name" style="font-size:11px;color:var(--text2);margin-top:4px"></div>
-      ${CU?.fromServer?'<div style="font-size:10px;color:var(--text3);margin-top:3px">✓ PDF será enviado para a nuvem</div>':''}
-    </div>
+      ${CU?.fromServer?'<div style="font-size:10px;color:var(--text3);margin-top:3px">✓ PDF será enviado para a nuvem</div>':''}    </div>
     <div style="display:flex;gap:8px"><button class="btn-p" onclick="salvarDoc('${vid}')">Salvar</button><button class="btn-g" onclick="closeMD()">Cancelar</button></div>`);
+}
+function switchDocTab(tab){
+  const isFoto=tab==='foto';
+  document.getElementById('doc-tab-foto').style.display=isFoto?'block':'none';
+  document.getElementById('doc-tab-pdf').style.display=isFoto?'none':'block';
+  const tf=document.getElementById('tab-foto'),tp=document.getElementById('tab-pdf');
+  if(isFoto){tf.style.background='var(--amber)';tf.style.color='var(--bg)';tf.style.borderColor='var(--amber)';tp.style.background='var(--bg2)';tp.style.color='var(--text2)';tp.style.borderColor='var(--border)';}
+  else{tp.style.background='var(--amber)';tp.style.color='var(--bg)';tp.style.borderColor='var(--amber)';tf.style.background='var(--bg2)';tf.style.color='var(--text2)';tf.style.borderColor='var(--border)';}
 }
 async function salvarDoc(vid){
   const tipo=document.getElementById('md-n').value,outro=document.getElementById('md-o').value.trim();
   const pdfInp=document.getElementById('md-pdf');
+  const fotoInp=document.getElementById('md-foto');
   const pdfFile=pdfInp?.files[0]||null;
+  const fotoFile=fotoInp?.files[0]||null;
   const nomeDoc=tipo==='Outro'&&outro?outro:tipo;
-  let pdfUrl=null,pdfNome=pdfFile?pdfFile.name:'';
+  let pdfUrl=null,pdfNome='',fotoUrl=null,fotoNome='';
+  // Upload foto do documento
+  if(fotoFile&&CU?.fromServer){
+    toast('Enviando foto...');
+    const token=localStorage.getItem('ag4_jwt')||CU?.token;
+    const tenant=getTenantSlug();
+    const fd=new FormData();
+    fd.append('foto',fotoFile);
+    fd.append('zona','documento');
+    try{
+      const resp=await fetch(`${API_URL}/api/cloudinary/foto/${vid}`,{
+        method:'POST',
+        headers:{'X-Tenant-Slug':tenant,'Authorization':'Bearer '+token},
+        body:fd
+      });
+      const data=await resp.json();
+      if(resp.ok){fotoUrl=data.url;fotoNome=fotoFile.name;}
+      else{toast(data.error||'Erro ao enviar foto','#e05252');return;}
+    }catch(e){toast('Erro ao enviar foto','#e05252');return;}
+  }
+  // Upload PDF do documento
   if(pdfFile&&CU?.fromServer){
     toast('Enviando PDF...');
     const token=localStorage.getItem('ag4_jwt')||CU?.token;
@@ -1017,7 +1062,7 @@ async function salvarDoc(vid){
       else{toast(data.error||'Erro ao enviar PDF','#e05252');return;}
     }catch(e){toast('Erro ao enviar PDF','#e05252');return;}
   }
-  const doc={id:uid(),veiculoId:vid,nome:nomeDoc,status:document.getElementById('md-s').value,obs:document.getElementById('md-ob').value.trim(),pdfNome,pdfUrl};
+  const doc={id:uid(),veiculoId:vid,nome:nomeDoc,status:document.getElementById('md-s').value,obs:document.getElementById('md-ob').value.trim(),pdfNome,pdfUrl,fotoUrl,fotoNome};
   const lista=load(KD);lista.push(doc);save(KD,lista);closeMD();toast('Documento salvo!');loadDocsVeh(vid);
 }
 function excluirDoc(id,vid){if(!confirm('Remover?'))return;save(KD,load(KD).filter(d=>d.id!==id));toast('Removido');loadDocsVeh(vid)}
