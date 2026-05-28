@@ -279,6 +279,26 @@ const getSess=()=>{try{return JSON.parse(sessionStorage.getItem('ag4_sess'))||nu
 const setSess=u=>sessionStorage.setItem('ag4_sess',JSON.stringify(u));
 const clrSess=()=>sessionStorage.removeItem('ag4_sess');
 const can=sec=>{if(!CU)return false;return ROLES[CU.cargo]?.nav.includes(sec)};
+function toggleItem(lbl){
+  const cb=lbl.querySelector('input');
+  const box=lbl.querySelector('span');
+  cb.checked=!cb.checked;
+  if(cb.checked){lbl.style.borderColor='var(--amber)';lbl.style.color='var(--amber)';box.style.background='var(--amber)';box.style.borderColor='var(--amber)';box.innerHTML='✓';}
+  else{lbl.style.borderColor='var(--border)';lbl.style.color='var(--text2)';box.style.background='transparent';box.style.borderColor='var(--text3)';box.innerHTML='';}
+}
+function getItens(){
+  return Array.from(document.querySelectorAll('#f-itens-wrap input[type=checkbox]:checked')).map(c=>c.value);
+}
+function setItens(vals){
+  document.querySelectorAll('#f-itens-wrap label').forEach(lbl=>{
+    const cb=lbl.querySelector('input');
+    const box=lbl.querySelector('span');
+    const checked=vals&&vals.includes(cb.value);
+    cb.checked=checked;
+    if(checked){lbl.style.borderColor='var(--amber)';lbl.style.color='var(--amber)';box.style.background='var(--amber)';box.style.borderColor='var(--amber)';box.innerHTML='✓';}
+    else{lbl.style.borderColor='var(--border)';lbl.style.color='var(--text2)';box.style.background='transparent';box.style.borderColor='var(--text3)';box.innerHTML='';}
+  });
+}
 function toggleAvaria(lbl){
   const cb=lbl.querySelector('input');
   const dot=lbl.querySelector('span');
@@ -570,6 +590,7 @@ function filterEst(){
       <div class="vinfo">
         <div class="vname">${v.marca} ${v.modelo} ${v.ano}</div>
         <div class="vdetail">${v.avaria||''}${v.km?' · '+v.km+' km':''}${v.cor?' · '+v.cor:''}</div>
+        ${(v.itens&&(Array.isArray(v.itens)?v.itens.length:v.itens))?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${(Array.isArray(v.itens)?v.itens:String(v.itens).split(',').map(s=>s.trim())).map(it=>`<span style="font-size:9px;background:rgba(232,160,32,0.1);border:1px solid rgba(232,160,32,0.25);color:var(--amber);padding:1px 6px;border-radius:4px">✓ ${it}</span>`).join('')}</div>`:''}
         ${(v.valorVenda||v.valor_venda)?`<div class="vprice">${fmtR(v.valorVenda||v.valor_venda)}</div>`:''}
         ${seller?`<div class="vseller">👤 ${seller}</div>`:''}
         <div class="vactions">${acts}</div>
@@ -805,6 +826,10 @@ function renderCadastro(sec){
     <div class="frow three"><div class="fg"><div class="fl">Valor compra (R$)</div><input id="f-compra" placeholder="45.000"/></div>
     <div class="fg"><div class="fl">Valor venda (R$)</div><input id="f-venda" placeholder="58.000"/></div>
     <div class="fg"><div class="fl">Status</div><select id="f-status"><option value="disponivel">Disponível</option><option value="vendido">Vendido</option></select></div></div>
+    <div class="frow full"><div class="fg">
+      <div class="fl">Itens do veículo <span style="font-size:10px;color:var(--text3)">(marque o que acompanha)</span></div>
+      <div id="f-itens-wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px"><label id="item-0" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleItem(this)"><input type="checkbox" value="Chave" style="display:none"/><span style="width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s"></span>Chave</label><label id="item-1" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleItem(this)"><input type="checkbox" value="Chave cópia" style="display:none"/><span style="width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s"></span>Chave cópia</label><label id="item-2" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleItem(this)"><input type="checkbox" value="Manual" style="display:none"/><span style="width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s"></span>Manual</label><label id="item-3" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleItem(this)"><input type="checkbox" value="Bateria" style="display:none"/><span style="width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s"></span>Bateria</label><label id="item-4" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleItem(this)"><input type="checkbox" value="Estepe" style="display:none"/><span style="width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s"></span>Estepe</label></div>
+    </div></div>
     <div class="frow full"><div class="fg"><div class="fl">Observações</div><textarea id="f-obs" placeholder="Outras informações..."></textarea></div></div>
     <div style="display:flex;gap:8px;margin-top:6px">
       <button class="btn-p" onclick="salvarVeh()">Salvar veículo</button>
@@ -822,7 +847,7 @@ async function salvarVeh(){
     local_patio:document.getElementById('f-local').value.trim(),renavam:document.getElementById('f-renavam').value.trim(),avaria:getAvarias().join(', ')||'Outros danos',
     nivel_dano:document.getElementById('f-dano').value,desc_avaria:document.getElementById('f-descavaria').value.trim(),
     valor_compra:document.getElementById('f-compra').value.trim(),valor_venda:document.getElementById('f-venda').value.trim(),
-    status:document.getElementById('f-status').value,obs:document.getElementById('f-obs').value.trim()};
+    status:document.getElementById('f-status').value,obs:document.getElementById('f-obs').value.trim(),itens:getItens()};
   if(!v.marca||!v.modelo||!v.ano){toast('Preencha marca, modelo e ano','#e05252');return}
 
   if(CU?.fromServer){
@@ -872,6 +897,7 @@ function editVeh(id){
     document.getElementById('f-venda').value=v.valorVenda||v.valor_venda||'';
     document.getElementById('f-status').value=v.status||'disponivel';
     document.getElementById('f-obs').value=v.obs||'';
+    setTimeout(()=>setItens(Array.isArray(v.itens)?v.itens:(v.itens?v.itens.split(',').map(s=>s.trim()):[])),50);
   },60);
 }
 
