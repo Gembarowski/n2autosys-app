@@ -519,7 +519,7 @@ function filterEst(){
       can('vendas')?`<button class="btn-sm g" onclick="irVenda('${v.id}')">Venda</button>`:'',
       can('anuncios')?`<button class="btn-sm b" onclick="irAnuncio('${v.id}')">Anúncio</button>`:'',
       can('vendas')?`<button class="btn-sm b" onclick="gerarContrato('${v.id}')">Contrato</button>`:'',
-      (can('admin')||can('gerente'))?`<button class="btn-sm r" onclick="excluirVeh('${v.id}')">×</button>`:''
+      (CU?.cargo==='admin'||CU?.cargo==='gerente')?`<button class="btn-sm r" onclick="excluirVeh('${v.id}')">×</button>`:''
     ].filter(Boolean).join('');
     return`<div class="vcard">
       <div class="vimg">${img}
