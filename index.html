@@ -468,7 +468,12 @@ function showSec(id){
 }
 
 // ══ HELPERS ════════════════════════════════════════════════════
-const getFotoCapa=vid=>{const fs=load(KF).filter(f=>f.veiculoId===vid);return fs.length?fs[0].data:null};
+const getFotoCapa=vid=>{
+  const v=load(KV).find(x=>x.id===vid);
+  if(v?.capaUrl)return v.capaUrl;
+  if(v?.capaId){const fs=load(KF).filter(f=>f.veiculoId===vid);const fc=fs.find(f=>f.id===v.capaId);if(fc)return fc.data||fc.url;}
+  const fs=load(KF).filter(f=>f.veiculoId===vid);return fs.length?(fs[0].url||fs[0].data):null;
+};
 const getSellerName=sid=>{if(!sid)return null;const s=load(KS).find(x=>x.id===sid);return s?s.nome:null};
 const calcCom=(venda,seller)=>{if(!seller)return 0;return parseR(venda.valor)*(parseFloat(seller.comissao||0)/100)};
 const roleTag=cargo=>{const r=ROLES[cargo]||ROLES.visualizador;return`<span class="role-tag" style="background:${r.bg};color:${r.color}">${r.label}</span>`};
@@ -885,18 +890,36 @@ async function loadFotosVeh(vid){
   }catch(e){area.innerHTML=`<div class="empty-state">Erro ao carregar fotos</div>`;}
 }
 function renderGradeFotos(area,fotos,vid,isServer){
+  const veiculos=load(KV);const veh=veiculos.find(x=>x.id===vid);
+  const capaId=veh?.capaId||null;const capaUrl=veh?.capaUrl||null;
   const grid=fotos.length?`<div class="photo-grid">${fotos.map(f=>{
     const src=isServer?f.url:f.data;
+    const isCapa=isServer?(capaUrl===f.url):(capaId===f.id);
     return `<div style="position:relative">
-      <img src="${src}" class="photo-thumb" onclick="verFotoURL('${src}','${f.nome||'Foto'}')" style="cursor:pointer"/>
-      <button style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;border-radius:4px;color:white;font-size:11px;cursor:pointer;padding:2px 7px" onclick="excluirFoto('${f.id}','${vid}',${isServer})">×</button>
+      <img src="${src}" class="photo-thumb" onclick="verFotoURL('${src}','${f.nome||'Foto'}')" style="cursor:pointer;${isCapa?'outline:2px solid var(--amber);outline-offset:2px':''}"/>
+      ${isCapa?'<span style="position:absolute;top:4px;left:4px;background:var(--amber);color:var(--bg);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">CAPA</span>':''}
+      <div style="position:absolute;bottom:4px;left:4px;right:4px;display:flex;gap:4px;justify-content:flex-end">
+        ${!isCapa?`<button style="background:rgba(0,0,0,.75);border:1px solid rgba(232,160,32,.6);border-radius:4px;color:var(--amber);font-size:9px;font-weight:700;cursor:pointer;padding:2px 6px" onclick="definirCapa('${f.id}','${src}','${vid}',${isServer})">⭐ Capa</button>`:''}
+        <button style="background:rgba(0,0,0,.75);border:none;border-radius:4px;color:white;font-size:11px;cursor:pointer;padding:2px 7px" onclick="excluirFoto('${f.id}','${vid}',${isServer})">×</button>
+      </div>
     </div>`;
   }).join('')}</div>`:`<div style="color:var(--text3);font-size:12px;padding:4px">Nenhuma foto cadastrada</div>`;
   area.innerHTML=`<div class="card">
     <div class="card-title">Fotos <span style="font-size:11px;font-weight:400;color:var(--text3)">${fotos.length} foto(s)</span></div>
     ${grid}
-    <p style="font-size:11px;color:var(--text3);margin-top:8px">A primeira foto é usada como capa no estoque. Formatos: JPG, PNG, WebP (máx. 15MB).</p>
+    <p style="font-size:11px;color:var(--text3);margin-top:8px">Clique em <b style="color:var(--amber)">⭐ Capa</b> para definir a foto de capa do estoque. Formatos: JPG, PNG, WebP (máx. 15MB).</p>
   </div>`;
+}
+function definirCapa(fotoId,fotoUrl,vid,isServer){
+  const veiculos=load(KV);
+  const idx=veiculos.findIndex(x=>x.id===vid);
+  if(idx===-1)return;
+  veiculos[idx].capaId=fotoId;
+  veiculos[idx].capaUrl=fotoUrl;
+  save(KV,veiculos);
+  toast('Foto de capa definida! ⭐');
+  loadFotosVeh(vid);
+  filterEst();
 }
 async function uploadFotos(){
   const inp=document.getElementById('foto-inp');
