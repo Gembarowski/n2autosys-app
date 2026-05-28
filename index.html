@@ -249,6 +249,28 @@ textarea{resize:vertical;min-height:64px}
 'use strict';
 // ══ STORAGE ═══════════════════════════════════════════════════
 const KV='ag4_v',KD='ag4_d',KVN='ag4_vn',KA='ag4_a',KF='ag4_f',KS='ag4_s',KU='ag4_u',KOR='ag4_orc',KSEG='ag4_seg';
+// Seed de associados para teste — remove após testes reais
+(function seedAssociados(){
+  if(localStorage.getItem('ag4_seg_seeded'))return;
+  const hoje=new Date();
+  const dtIni=d=>new Date(hoje.getFullYear()-1,hoje.getMonth(),hoje.getDate()+d).toISOString().slice(0,10);
+  const dtFim=d=>new Date(hoje.getFullYear()+1,hoje.getMonth(),hoje.getDate()+d).toISOString().slice(0,10);
+  const dados=[
+    {placa:'ABC1D23',marca:'Fiat',modelo:'Strada',ano:'2020',cor:'Branca',nomeSegurado:'Carlos Eduardo Souza',cpfSegurado:'123.456.789-01',telSegurado:'(41) 99801-1234',seguradora:'AssoCar Paraná',apolice:'AP-001234',tipoApolice:'Compreensivo',coberturas:'Colisão, Furto, Incêndio',inicioVigencia:dtIni(-30),fimVigencia:dtFim(30),obs:'Cliente VIP'},
+    {placa:'DEF2E34',marca:'Volkswagen',modelo:'Gol',ano:'2019',cor:'Prata',nomeSegurado:'Ana Paula Ferreira',cpfSegurado:'234.567.890-12',telSegurado:'(41) 98702-2345',seguradora:'AutoAssoc Sul',apolice:'AP-002345',tipoApolice:'Terceiros',coberturas:'Danos a terceiros',inicioVigencia:dtIni(-60),fimVigencia:dtFim(60),obs:''},
+    {placa:'GHI3F45',marca:'Chevrolet',modelo:'Onix',ano:'2021',cor:'Vermelha',nomeSegurado:'Roberto Lima',cpfSegurado:'345.678.901-23',telSegurado:'(41) 97603-3456',seguradora:'AssoCar Paraná',apolice:'AP-003456',tipoApolice:'Total',coberturas:'Colisão, Furto, Incêndio, Terceiros',inicioVigencia:dtIni(-10),fimVigencia:dtFim(80),obs:'Renovação em breve'},
+    {placa:'JKL4G56',marca:'Toyota',modelo:'Corolla',ano:'2022',cor:'Cinza',nomeSegurado:'Fernanda Costa',cpfSegurado:'456.789.012-34',telSegurado:'(41) 96504-4567',seguradora:'ProtegeBem',apolice:'AP-004567',tipoApolice:'Compreensivo',coberturas:'Colisão, Furto, Incêndio, Assistência 24h',inicioVigencia:dtIni(-90),fimVigencia:dtFim(10),obs:'Vence em breve'},
+    {placa:'MNO5H67',marca:'Honda',modelo:'Civic',ano:'2020',cor:'Preta',nomeSegurado:'Marcos Oliveira',cpfSegurado:'567.890.123-45',telSegurado:'(41) 95405-5678',seguradora:'AutoAssoc Sul',apolice:'AP-005678',tipoApolice:'Incêndio e Roubo',coberturas:'Incêndio, Roubo, Furto',inicioVigencia:dtIni(-45),fimVigencia:dtFim(45),obs:''},
+    {placa:'PQR6I78',marca:'Renault',modelo:'Kwid',ano:'2021',cor:'Azul',nomeSegurado:'Juliana Martins',cpfSegurado:'678.901.234-56',telSegurado:'(41) 94306-6789',seguradora:'AssoCar Paraná',apolice:'AP-006789',tipoApolice:'Terceiros',coberturas:'Danos a terceiros, Assistência',inicioVigencia:dtIni(-20),fimVigencia:dtFim(70),obs:''},
+    {placa:'STU7J89',marca:'Hyundai',modelo:'HB20',ano:'2019',cor:'Branca',nomeSegurado:'Paulo Henrique Dias',cpfSegurado:'789.012.345-67',telSegurado:'(41) 93207-7890',seguradora:'ProtegeBem',apolice:'AP-007890',tipoApolice:'Compreensivo',coberturas:'Colisão, Furto, Incêndio',inicioVigencia:dtIni(-120),fimVigencia:dtFim(-5),obs:'VENCIDO — renovar'},
+    {placa:'VWX8K90',marca:'Jeep',modelo:'Renegade',ano:'2022',cor:'Verde',nomeSegurado:'Beatriz Santos',cpfSegurado:'890.123.456-78',telSegurado:'(41) 92108-8901',seguradora:'AutoAssoc Sul',apolice:'AP-008901',tipoApolice:'Total',coberturas:'Colisão, Furto, Incêndio, Terceiros, Vidros',inicioVigencia:dtIni(-15),fimVigencia:dtFim(90),obs:''},
+    {placa:'YZA9L01',marca:'Nissan',modelo:'Kicks',ano:'2023',cor:'Champagne',nomeSegurado:'Diego Almeida',cpfSegurado:'901.234.567-89',telSegurado:'(41) 91009-9012',seguradora:'AssoCar Paraná',apolice:'AP-009012',tipoApolice:'Compreensivo',coberturas:'Colisão, Furto, Incêndio, Assistência 24h',inicioVigencia:dtIni(-5),fimVigencia:dtFim(120),obs:'Novo associado'},
+    {placa:'BCD0M12',marca:'Ford',modelo:'Ka',ano:'2018',cor:'Prata',nomeSegurado:'Luciana Pereira',cpfSegurado:'012.345.678-90',telSegurado:'(41) 90010-0123',seguradora:'ProtegeBem',apolice:'AP-010123',tipoApolice:'Terceiros',coberturas:'Danos a terceiros',inicioVigencia:dtIni(-200),fimVigencia:dtFim(-30),obs:'VENCIDO'},
+  ];
+  const lista=dados.map((d,i)=>({...d,id:'seed_seg_'+i,chassi:'',criadoEm:new Date().toLocaleDateString('pt-BR')}));
+  localStorage.setItem(KSEG,JSON.stringify(lista));
+  localStorage.setItem('ag4_seg_seeded','1');
+})();
 const load=k=>{try{const r=JSON.parse(localStorage.getItem(k));return Array.isArray(r)?r:[]}catch{return[]}};
 const save=(k,d)=>{try{localStorage.setItem(k,JSON.stringify(d))}catch{toast('Armazenamento cheio!','#e05252')}};
 const loadObj=(k,d={})=>{try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}};
@@ -518,6 +540,12 @@ async function renderEstoque(sec){
             ...sv,
             valorCompra:sv.valorCompra||sv.valor_compra||'',
             valorVenda:sv.valorVenda||sv.valor_venda||'',
+            renavam:sv.renavam||sv.renavam||'',
+            chassi:sv.chassi||'',
+            local:sv.local||sv.local_patio||'',
+            avaria:sv.avaria||'',
+            obs:sv.obs||'',
+            itens:sv.itens||(lv?.itens||[]),
             capaId:lv?.capaId||null,
             capaUrl:lv?.capaUrl||null,
           };
