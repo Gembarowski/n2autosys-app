@@ -562,7 +562,7 @@ function filterEst(){
       <div class="vinfo">
         <div class="vname">${v.marca} ${v.modelo} ${v.ano}</div>
         <div class="vdetail">${v.avaria||''}${v.km?' · '+v.km+' km':''}${v.cor?' · '+v.cor:''}</div>
-        <div class="vprice">${fmtR(v.valorVenda)}</div>
+        ${(v.valorVenda||v.valor_venda)?`<div class="vprice">${fmtR(v.valorVenda||v.valor_venda)}</div>`:''}
         ${seller?`<div class="vseller">👤 ${seller}</div>`:''}
         <div class="vactions">${acts}</div>
       </div></div>`;
@@ -1057,14 +1057,15 @@ async function salvarDoc(vid){
   let pdfUrl=null,pdfNome='',fotoUrl=null,fotoNome='';
   // Upload foto do documento
   if(fotoFile&&CU?.fromServer){
-    toast('Enviando foto...');
+    toast('Enviando foto do documento...');
     const token=localStorage.getItem('ag4_jwt')||CU?.token;
     const tenant=getTenantSlug();
     const fd=new FormData();
-    fd.append('foto',fotoFile);
-    fd.append('zona','documento');
+    // Usa endpoint de PDF (pasta docs/) para não misturar com fotos do veículo
+    fd.append('pdf',fotoFile);
+    fd.append('nomeDoc',nomeDoc);
     try{
-      const resp=await fetch(`${API_URL}/api/cloudinary/foto/${vid}`,{
+      const resp=await fetch(`${API_URL}/api/cloudinary/pdf/${vid}`,{
         method:'POST',
         headers:{'X-Tenant-Slug':tenant,'Authorization':'Bearer '+token},
         body:fd
