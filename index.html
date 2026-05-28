@@ -118,6 +118,20 @@ textarea{resize:vertical;min-height:64px}
 .vprice{font-size:16px;font-weight:800;color:var(--green);margin-top:6px;font-family:'Barlow Condensed',sans-serif}
 .vseller{font-size:11px;color:var(--purple);margin-top:3px}
 .vactions{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}
+.ficha-panel{position:fixed;top:0;right:-420px;width:400px;height:100vh;background:var(--bg1);border-left:1px solid var(--border);z-index:200;display:flex;flex-direction:column;transition:right .3s ease;overflow:hidden}
+.ficha-panel.open{right:0;box-shadow:-4px 0 24px rgba(0,0,0,.4)}
+.ficha-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199;display:none}
+.ficha-overlay.open{display:block}
+.ficha-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ficha-body{flex:1;overflow-y:auto;padding:16px 18px}
+.ficha-section{margin-bottom:18px}
+.ficha-section-title{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ficha-row{display:flex;gap:8px;margin-bottom:8px}
+.ficha-field{flex:1;background:var(--bg2);border-radius:7px;padding:8px 10px}
+.ficha-label{font-size:10px;color:var(--text3);margin-bottom:2px}
+.ficha-value{font-size:13px;color:var(--text);font-weight:500}
+.ficha-foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.ficha-foto-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--border)}
 
 /* ── TIMELINE / DOCS ── */
 .tl{display:flex;flex-direction:column;gap:7px}
@@ -611,12 +625,12 @@ function filterEst(){
       (CU?.cargo==='admin'||CU?.cargo==='gerente')?`<button class="btn-sm r" onclick="excluirVeh('${v.id}')">×</button>`:''
     ].filter(Boolean).join('');
     return`<div class="vcard">
-      <div class="vimg">${img}
+      <div class="vimg" onclick="verFichaVeh('${v.id}')" style="cursor:pointer">${img}
         <span class="badge ${statusBadge(v.status)}">${statusLabel(v.status)}</span>
         ${v.fromVistoria?'<span class="vbadge-vis">⚡ Vistoria</span>':''}
       </div>
       <div class="vinfo">
-        <div class="vname">${v.marca} ${v.modelo} ${v.ano}</div>
+        <div class="vname" onclick="verFichaVeh('${v.id}')" style="cursor:pointer">${v.marca} ${v.modelo} ${v.ano}</div>
         <div class="vdetail">${v.avaria||''}${v.km?' · '+v.km+' km':''}${v.cor?' · '+v.cor:''}</div>
         ${(v.itens&&(Array.isArray(v.itens)?v.itens.length:v.itens))?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${(Array.isArray(v.itens)?v.itens:String(v.itens).split(',').map(s=>s.trim())).map(it=>`<span style="font-size:9px;background:rgba(232,160,32,0.1);border:1px solid rgba(232,160,32,0.25);color:var(--amber);padding:1px 6px;border-radius:4px">✓ ${it}</span>`).join('')}</div>`:''}
         ${(v.valorVenda||v.valor_venda)?`<div class="vprice">${fmtR(v.valorVenda||v.valor_venda)}</div>`:''}
@@ -626,6 +640,91 @@ function filterEst(){
   }).join('');
 }
 
+function closeFicha(){
+  document.getElementById('ficha-panel').classList.remove('open');
+  document.getElementById('ficha-overlay').classList.remove('open');
+}
+async function verFichaVeh(id){
+  const vs=load(KV),sellers=load(KS),docs=load(KD);
+  const v=vs.find(x=>x.id===id);if(!v)return;
+  const seller=v.vendedorId?sellers.find(s=>s.id===v.vendedorId):null;
+  const vDocs=docs.filter(d=>d.veiculoId===id);
+
+  document.getElementById('ficha-title').textContent=v.marca+' '+v.modelo+' '+v.ano;
+
+  // Busca fotos do servidor ou localStorage
+  let fotos=[];
+  if(CU?.fromServer){
+    try{const fd=await apiRequest('GET',`/api/cloudinary/fotos/${id}`);fotos=fd?.fotos||[];}catch(e){}
+  } else {
+    fotos=load(KF).filter(f=>f.veiculoId===id);
+  }
+
+  const itensArr=Array.isArray(v.itens)?v.itens:(v.itens?String(v.itens).split(',').map(s=>s.trim()):[]);
+
+  document.getElementById('ficha-body').innerHTML=`
+    ${fotos.length?`<div class="ficha-section">
+      <div class="ficha-section-title">Fotos (${fotos.length})</div>
+      <div class="ficha-foto-grid">${fotos.map(f=>{const src=f.url||f.data;return`<img src="${src}" onclick="verFotoURL('${src}','${v.marca} ${v.modelo}')"/>`;}).join('')}</div>
+    </div>`:''}
+    <div class="ficha-section">
+      <div class="ficha-section-title">Identificação</div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">Tipo</div><div class="ficha-value">${v.tipo||'—'}</div></div>
+        <div class="ficha-field"><div class="ficha-label">Status</div><div class="ficha-value"><span class="badge ${statusBadge(v.status)}" style="position:static;font-size:11px">${statusLabel(v.status)}</span></div></div>
+      </div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">Placa</div><div class="ficha-value">${v.placa||'—'}</div></div>
+        <div class="ficha-field"><div class="ficha-label">Cor</div><div class="ficha-value">${v.cor||'—'}</div></div>
+      </div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">Chassi</div><div class="ficha-value" style="font-family:'JetBrains Mono',monospace;font-size:11px">${v.chassi||'—'}</div></div>
+        <div class="ficha-field"><div class="ficha-label">RENAVAM</div><div class="ficha-value" style="font-family:'JetBrains Mono',monospace;font-size:11px">${v.renavam||'—'}</div></div>
+      </div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">KM</div><div class="ficha-value">${v.km||'—'}</div></div>
+        <div class="ficha-field"><div class="ficha-label">Local no pátio</div><div class="ficha-value">${v.local||v.local_patio||'—'}</div></div>
+      </div>
+    </div>
+    <div class="ficha-section">
+      <div class="ficha-section-title">Avaria</div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">Tipo de avaria</div><div class="ficha-value">${v.avaria||'—'}</div></div>
+        <div class="ficha-field"><div class="ficha-label">Nível de dano</div><div class="ficha-value">${v.nivel_dano||v.dano||'—'}</div></div>
+      </div>
+      ${(v.desc_avaria||v.descAvaria)?`<div class="ficha-field" style="margin-bottom:8px"><div class="ficha-label">Descrição</div><div class="ficha-value" style="font-size:12px;line-height:1.5">${v.desc_avaria||v.descAvaria}</div></div>`:''}
+    </div>
+    <div class="ficha-section">
+      <div class="ficha-section-title">Financeiro</div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">Valor de compra</div><div class="ficha-value" style="color:var(--red)">${fmtR(v.valorCompra||v.valor_compra)}</div></div>
+        <div class="ficha-field"><div class="ficha-label">Valor de venda</div><div class="ficha-value" style="color:var(--green)">${fmtR(v.valorVenda||v.valor_venda)}</div></div>
+      </div>
+      ${seller?`<div class="ficha-field" style="margin-bottom:8px"><div class="ficha-label">Vendedor responsável</div><div class="ficha-value">👤 ${seller.nome}</div></div>`:''}
+    </div>
+    ${itensArr.length?`<div class="ficha-section">
+      <div class="ficha-section-title">Itens do veículo</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${itensArr.map(it=>`<span style="font-size:12px;background:rgba(232,160,32,0.1);border:1px solid rgba(232,160,32,0.25);color:var(--amber);padding:3px 10px;border-radius:6px">✓ ${it}</span>`).join('')}</div>
+    </div>`:''}
+    ${vDocs.length?`<div class="ficha-section">
+      <div class="ficha-section-title">Documentos (${vDocs.length})</div>
+      ${vDocs.map(d=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg2);border-radius:7px;border:1px solid var(--border);margin-bottom:5px">
+        <span style="font-size:12px;color:var(--text)">${d.nome}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${d.fotoUrl?`<span onclick="verFotoURL('${d.fotoUrl}','${d.nome}')" style="font-size:10px;color:var(--amber);cursor:pointer">📷 Ver</span>`:''}
+          ${d.pdfUrl?`<a href="${d.pdfUrl}" target="_blank" style="font-size:10px;color:var(--blue);text-decoration:none">📄 Ver</a>`:''}
+          <span class="ds ${d.status==='ok'?'ds-ok':d.status==='pendente'?'ds-pend':'ds-miss'}" style="font-size:10px">${d.status==='ok'?'Recebido':d.status==='pendente'?'Pendente':'Faltando'}</span>
+        </div>
+      </div>`).join('')}
+    </div>`:''}
+    ${v.obs?`<div class="ficha-section">
+      <div class="ficha-section-title">Observações</div>
+      <div class="ficha-field"><div class="ficha-value" style="font-size:12px;line-height:1.5">${v.obs}</div></div>
+    </div>`:''}
+  `;
+  document.getElementById('ficha-panel').classList.add('open');
+  document.getElementById('ficha-overlay').classList.add('open');
+}
 async function excluirVeh(id){
   if(!confirm('Excluir este veículo? As fotos e documentos também serão removidos.'))return;
   if(CU?.fromServer){
@@ -2253,5 +2352,13 @@ function excluirSeguro(id){
 const sess=getSess();
 if(sess){CU=sess;document.getElementById('login-wrap').style.display='none';document.getElementById('app').style.display='flex';initApp()}
 </script>
+<div class="ficha-overlay" id="ficha-overlay" onclick="closeFicha()"></div>
+<div class="ficha-panel" id="ficha-panel">
+  <div class="ficha-header">
+    <span id="ficha-title" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text)">Ficha do Veículo</span>
+    <button onclick="closeFicha()" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:4px 10px;cursor:pointer;font-size:13px">✕ Fechar</button>
+  </div>
+  <div class="ficha-body" id="ficha-body"></div>
+</div>
 </body>
 </html>
