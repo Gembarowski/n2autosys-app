@@ -279,6 +279,26 @@ const getSess=()=>{try{return JSON.parse(sessionStorage.getItem('ag4_sess'))||nu
 const setSess=u=>sessionStorage.setItem('ag4_sess',JSON.stringify(u));
 const clrSess=()=>sessionStorage.removeItem('ag4_sess');
 const can=sec=>{if(!CU)return false;return ROLES[CU.cargo]?.nav.includes(sec)};
+function toggleAvaria(lbl){
+  const cb=lbl.querySelector('input');
+  const dot=lbl.querySelector('span');
+  cb.checked=!cb.checked;
+  if(cb.checked){lbl.style.borderColor='var(--amber)';lbl.style.color='var(--amber)';dot.style.background='var(--amber)';dot.style.borderColor='var(--amber)';}
+  else{lbl.style.borderColor='var(--border)';lbl.style.color='var(--text2)';dot.style.background='transparent';dot.style.borderColor='var(--text3)';}
+}
+function getAvarias(){
+  return Array.from(document.querySelectorAll('#f-avaria-wrap input[type=checkbox]:checked')).map(c=>c.value);
+}
+function setAvarias(vals){
+  document.querySelectorAll('#f-avaria-wrap label').forEach(lbl=>{
+    const cb=lbl.querySelector('input');
+    const dot=lbl.querySelector('span');
+    const checked=vals.includes(cb.value);
+    cb.checked=checked;
+    if(checked){lbl.style.borderColor='var(--amber)';lbl.style.color='var(--amber)';dot.style.background='var(--amber)';dot.style.borderColor='var(--amber)';}
+    else{lbl.style.borderColor='var(--border)';lbl.style.color='var(--text2)';dot.style.background='transparent';dot.style.borderColor='var(--text3)';}
+  });
+}
 
 function getUsers(){
   let users=load(KU);
@@ -754,9 +774,12 @@ function renderCadastro(sec){
     <div class="fg"><div class="fl">Placa</div><input id="f-placa" placeholder="ABC-1234"/></div>
     <div class="fg"><div class="fl">Km</div><input id="f-km" placeholder="87.000"/></div></div>
     <div class="frow"><div class="fg"><div class="fl">Chassi</div><input id="f-chassi" placeholder="9BW..."/></div>
-    <div class="fg"><div class="fl">Local no pátio</div><input id="f-local" placeholder="Pátio 1 / Vaga 12"/></div></div>
-    <div class="frow"><div class="fg"><div class="fl">Tipo de avaria</div><select id="f-avaria"><option>Colisão frontal</option><option>Colisão traseira</option><option>Colisão lateral</option><option>Capotamento</option><option>Alagamento</option><option>Incêndio</option><option>Outros danos</option></select></div>
+    <div class="fg"><div class="fl">RENAVAN</div><input id="f-renavan" placeholder="00000000000" maxlength="11"/></div></div>
+    <div class="frow"><div class="fg"><div class="fl">Local no pátio</div><input id="f-local" placeholder="Pátio 1 / Vaga 12"/></div>
     <div class="fg"><div class="fl">Nível de dano</div><select id="f-dano"><option>Pequena Monta</option><option>Média Monta</option><option>Grande Monta</option></select></div></div>
+    <div class="frow full"><div class="fg"><div class="fl">Tipo de avaria <span style="font-size:10px;color:var(--text3)">(selecione uma ou mais)</span></div>
+    <div id="f-avaria-wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px"><label id="avaria-0" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Colisão frontal" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Colisão frontal</label><label id="avaria-1" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Colisão traseira" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Colisão traseira</label><label id="avaria-2" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Colisão lateral" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Colisão lateral</label><label id="avaria-3" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Capotamento" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Capotamento</label><label id="avaria-4" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Alagamento" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Alagamento</label><label id="avaria-5" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Incêndio" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Incêndio</label><label id="avaria-6" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Dano no teto" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Dano no teto</label><label id="avaria-7" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Dano no capô" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Dano no capô</label><label id="avaria-8" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Dano na lataria" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Dano na lataria</label><label id="avaria-9" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Outros danos" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Outros danos</label></div>
+    </div></div>
     <div class="frow full"><div class="fg"><div class="fl">Descrição da avaria</div><textarea id="f-descavaria" placeholder="Peças comprometidas, condição do motor..."></textarea></div></div>
     <div class="frow three"><div class="fg"><div class="fl">Valor compra (R$)</div><input id="f-compra" placeholder="45.000"/></div>
     <div class="fg"><div class="fl">Valor venda (R$)</div><input id="f-venda" placeholder="58.000"/></div>
@@ -775,7 +798,7 @@ async function salvarVeh(){
     modelo:document.getElementById('f-modelo').value.trim(),ano:document.getElementById('f-ano').value,
     cor:document.getElementById('f-cor').value.trim(),placa:document.getElementById('f-placa').value.trim().toUpperCase(),
     km:document.getElementById('f-km').value.trim(),chassi:document.getElementById('f-chassi').value.trim(),
-    local_patio:document.getElementById('f-local').value.trim(),avaria:document.getElementById('f-avaria').value,
+    local_patio:document.getElementById('f-local').value.trim(),renavan:document.getElementById('f-renavan').value.trim(),avaria:getAvarias().join(', ')||'Outros danos',
     nivel_dano:document.getElementById('f-dano').value,desc_avaria:document.getElementById('f-descavaria').value.trim(),
     valor_compra:document.getElementById('f-compra').value.trim(),valor_venda:document.getElementById('f-venda').value.trim(),
     status:document.getElementById('f-status').value,obs:document.getElementById('f-obs').value.trim()};
@@ -819,8 +842,9 @@ function editVeh(id){
     document.getElementById('f-placa').value=v.placa||'';
     document.getElementById('f-km').value=v.km||'';
     document.getElementById('f-chassi').value=v.chassi||'';
+    document.getElementById('f-renavan').value=v.renavan||'';
     document.getElementById('f-local').value=v.local||'';
-    document.getElementById('f-avaria').value=v.avaria||'Colisão frontal';
+    setTimeout(()=>setAvarias(v.avaria?v.avaria.split(', ').map(s=>s.trim()):[]),50);
     document.getElementById('f-dano').value=v.dano||'Pequena Monta';
     document.getElementById('f-descavaria').value=v.descAvaria||'';
     document.getElementById('f-compra').value=v.valorCompra||'';
