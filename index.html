@@ -986,7 +986,9 @@ async function salvarVeh(){
         // Atualiza cache local
         const lista=load(KV);
         const idx=lista.findIndex(x=>x.id===resp.veiculo.id);
-        if(idx>=0)lista[idx]=resp.veiculo;else lista.unshift(resp.veiculo);
+        const oldV=idx>=0?lista[idx]:null;
+        const merged={...resp.veiculo,capaId:oldV?.capaId||null,capaUrl:oldV?.capaUrl||null};
+        if(idx>=0)lista[idx]=merged;else lista.unshift(merged);
         save(KV,lista);
         toast('Veículo salvo!');showSec('estoque');return;
       }
@@ -997,7 +999,8 @@ async function salvarVeh(){
   const id=editId||uid();
   v.id=id;v.criadoEm=new Date().toLocaleDateString('pt-BR');
   const lista=load(KV);const idx=lista.findIndex(x=>x.id===id);
-  const old=idx>=0?lista[idx]:null;if(old)v.vendedorId=old.vendedorId||null;
+  const old=idx>=0?lista[idx]:null;
+  if(old){v.vendedorId=old.vendedorId||null;v.capaId=old.capaId||null;v.capaUrl=old.capaUrl||null;}
   if(idx>=0)lista[idx]=v;else lista.unshift(v);save(KV,lista);
   toast('Veículo salvo!');showSec('estoque');
 }
