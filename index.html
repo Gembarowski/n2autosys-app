@@ -537,14 +537,26 @@ function filterEst(){
 }
 
 async function excluirVeh(id){
-  if(!confirm('Excluir este veículo?'))return;
+  if(!confirm('Excluir este veículo? As fotos e documentos também serão removidos.'))return;
   if(CU?.fromServer){
     try{
+      // 1. Busca fotos do veículo no servidor e remove do Cloudinary
+      const fotosData=await apiRequest('GET',`/api/cloudinary/fotos/${id}`);
+      const fotos=fotosData?.fotos||[];
+      if(fotos.length>0){
+        toast(`Removendo ${fotos.length} foto(s)...`);
+        for(const f of fotos){
+          await apiRequest('DELETE',`/api/cloudinary/foto/${f.id}`).catch(()=>{});
+        }
+      }
+      // 2. Deleta o veículo no servidor
       await apiRequest('DELETE','/api/veiculos/'+id);
     }catch(e){console.warn('Erro ao excluir no servidor:',e.message);}
   }
+  // 3. Limpa localStorage
   save(KV,load(KV).filter(x=>x.id!==id));
   save(KF,load(KF).filter(f=>f.veiculoId!==id));
+  save(KD,load(KD).filter(d=>d.veiculoId!==id));
   toast('Veículo excluído');filterEst();
 }
 function irFotos(id){showSec('fotos');setTimeout(()=>{const s=document.getElementById('fvs');if(s){s.value=id;loadFotosVeh(id)}},80)}
