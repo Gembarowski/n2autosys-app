@@ -255,7 +255,7 @@ const loadObj=(k,d={})=>{try{return JSON.parse(localStorage.getItem(k))||d}catch
 const saveObj=(k,d)=>localStorage.setItem(k,JSON.stringify(d));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const toast=(msg,col='#E8A020')=>{const t=document.getElementById('toast');t.textContent=msg;t.style.background=col;t.style.color=col==='#E8A020'?'#0f1117':'#fff';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2700)};
-const fmtR=v=>{if(!v&&v!==0)return'—';const s=String(v).trim();const n=typeof v==='number'?v:parseFloat(s.replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.'));return isNaN(n)?s:'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2})};
+const fmtR=v=>{if(!v&&v!==0)return'—';const n=typeof v==='number'?v:parseFloat(String(v).replace(/[R$\s]/g,'').replace(',','.'));return isNaN(n)?String(v):'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2})};
 const parseR=v=>parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
 const statusLabel=s=>s==='disponivel'?'Disponível':'Vendido';
 const statusBadge=s=>s==='disponivel'?'bd':'bv';
@@ -570,7 +570,7 @@ function filterEst(){
       <div class="vinfo">
         <div class="vname">${v.marca} ${v.modelo} ${v.ano}</div>
         <div class="vdetail">${v.avaria||''}${v.km?' · '+v.km+' km':''}${v.cor?' · '+v.cor:''}</div>
-        ${(v.valorVenda||v.valor_venda)?`<div class="vprice">${fmtR(parseFloat(String(v.valorVenda||v.valor_venda).replace(/[R$\s.]/g,'').replace(',','.'))||0)}</div>`:''}
+        ${(v.valorVenda||v.valor_venda)?`<div class="vprice">${fmtR(v.valorVenda||v.valor_venda)}</div>`:''}
         ${seller?`<div class="vseller">👤 ${seller}</div>`:''}
         <div class="vactions">${acts}</div>
       </div></div>`;
@@ -2201,4 +2201,3 @@ if(sess){CU=sess;document.getElementById('login-wrap').style.display='none';docu
 </script>
 </body>
 </html>
-
