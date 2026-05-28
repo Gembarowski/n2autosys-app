@@ -1150,10 +1150,27 @@ function renderDocumentos(sec){
     <button class="btn-p" onclick="addDocModal()">+ Documento</button>
   </div><div id="doc-area"><div class="empty-state">Selecione um veículo</div></div>`;
 }
-function loadDocsVeh(vid){
+async function loadDocsVeh(vid){
   const sel=document.getElementById('dvs');if(sel&&vid)sel.value=vid;
   const area=document.getElementById('doc-area');if(!area||!vid)return;
+  if(CU?.fromServer){
+    try{
+      const data=await apiRequest('GET',`/api/documentos/${vid}`);
+      if(data?.documentos){
+        const docs=data.documentos.map(d=>({
+          id:d.id,veiculoId:d.veiculo_id,nome:d.nome,
+          status:d.status,obs:d.obs||'',
+          pdfUrl:d.pdf_url||null,pdfNome:d.pdf_nome||null,
+          fotoUrl:d.foto_url||null,fotoNome:d.foto_nome||null
+        }));
+        renderDocsArea(area,docs,vid);return;
+      }
+    }catch(e){console.warn('Erro ao buscar docs do servidor',e);}
+  }
   const docs=load(KD).filter(d=>d.veiculoId===vid);
+  renderDocsArea(area,docs,vid);
+}
+function renderDocsArea(area,docs,vid){
   const faltando=DOCS_PAD.filter(d=>!docs.map(x=>x.nome).includes(d));
   area.innerHTML=`<div class="card"><div class="card-title">Documentos</div>
     ${docs.length===0?'<div style="color:var(--text3);font-size:12px;padding:4px">Nenhum documento ainda</div>':
@@ -1258,10 +1275,26 @@ async function salvarDoc(vid){
       else{toast(data.error||'Erro ao enviar PDF','#e05252');return;}
     }catch(e){toast('Erro ao enviar PDF','#e05252');return;}
   }
-  const doc={id:uid(),veiculoId:vid,nome:nomeDoc,status:document.getElementById('md-s').value,obs:document.getElementById('md-ob').value.trim(),pdfNome,pdfUrl,fotoUrl,fotoNome};
+  const docData={nome:nomeDoc,status:document.getElementById('md-s').value,obs:document.getElementById('md-ob').value.trim(),pdf_url:pdfUrl,pdf_nome:pdfNome,foto_url:fotoUrl,foto_nome:fotoNome};
+  if(CU?.fromServer){
+    try{
+      const resp=await apiRequest('POST',`/api/documentos/${vid}`,docData);
+      if(resp?.documento){closeMD();toast('Documento salvo!');loadDocsVeh(vid);return;}
+      toast(resp?.error||'Erro ao salvar','#e05252');return;
+    }catch(e){toast('Erro de conexão','#e05252');return;}
+  }
+  const doc={id:uid(),veiculoId:vid,...docData,pdfUrl,pdfNome,fotoUrl,fotoNome};
   const lista=load(KD);lista.push(doc);save(KD,lista);closeMD();toast('Documento salvo!');loadDocsVeh(vid);
 }
-function excluirDoc(id,vid){if(!confirm('Remover?'))return;save(KD,load(KD).filter(d=>d.id!==id));toast('Removido');loadDocsVeh(vid)}
+async function excluirDoc(id,vid){
+  if(!confirm('Remover documento?'))return;
+  if(CU?.fromServer){
+    try{await apiRequest('DELETE',`/api/documentos/${id}`);}catch(e){}
+  } else {
+    save(KD,load(KD).filter(d=>d.id!==id));
+  }
+  toast('Removido');loadDocsVeh(vid);
+}
 
 // ══ VENDAS ════════════════════════════════════════════════════
 function renderVendas(sec){
