@@ -945,7 +945,7 @@ function renderCadastro(sec){
     <div class="frow"><div class="fg"><div class="fl">Chassi</div><input id="f-chassi" placeholder="9BW..."/></div>
     <div class="fg"><div class="fl">RENAVAM</div><input id="f-renavam" placeholder="00000000000" maxlength="11"/></div></div>
     <div class="frow"><div class="fg"><div class="fl">Local no pátio</div><input id="f-local" placeholder="Pátio 1 / Vaga 12"/></div>
-    <div class="fg"><div class="fl">Nível de dano</div><select id="f-dano"><option>Pequena Monta</option><option>Média Monta</option><option>Grande Monta</option></select></div></div>
+    <div class="fg"><div class="fl">Nível de dano</div><select id="f-dano"><option>Sem Monta</option><option>Pequena Monta</option><option>Média Monta</option><option>Grande Monta</option></select></div></div>
     <div class="frow full"><div class="fg"><div class="fl">Tipo de avaria <span style="font-size:10px;color:var(--text3)">(selecione uma ou mais)</span></div>
     <div id="f-avaria-wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px"><label id="avaria-0" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Colisão frontal" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Colisão frontal</label><label id="avaria-1" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Colisão traseira" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Colisão traseira</label><label id="avaria-2" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Colisão lateral" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Colisão lateral</label><label id="avaria-3" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Capotamento" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Capotamento</label><label id="avaria-4" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Alagamento" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Alagamento</label><label id="avaria-5" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Incêndio" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Incêndio</label><label id="avaria-6" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Dano no teto" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Dano no teto</label><label id="avaria-7" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Dano no capô" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Dano no capô</label><label id="avaria-8" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Dano na lataria" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Dano na lataria</label><label id="avaria-9" style="display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleAvaria(this)"><input type="checkbox" value="Outros danos" style="display:none"/><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--text3);flex-shrink:0;transition:all .15s"></span>Outros danos</label></div>
     </div></div>
@@ -1021,7 +1021,7 @@ function editVeh(id){
     document.getElementById('f-renavam').value=v.renavam||'';
     document.getElementById('f-local').value=v.local||'';
     setTimeout(()=>setAvarias(v.avaria?v.avaria.split(', ').map(s=>s.trim()):[]),50);
-    document.getElementById('f-dano').value=v.dano||'Pequena Monta';
+    document.getElementById('f-dano').value=v.nivel_dano||v.dano||'Sem Monta';
     document.getElementById('f-descavaria').value=v.descAvaria||'';
     document.getElementById('f-compra').value=v.valorCompra||v.valor_compra||'';
     document.getElementById('f-venda').value=v.valorVenda||v.valor_venda||'';
@@ -2253,6 +2253,11 @@ function renderListaSeguros(lista){
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:2px">Coberturas</div>
             <div style="font-size:12px;color:var(--text2)">${s.coberturas}</div>
           </div>`:''}
+        ${(s.valorSegurado||s.franquia||s.premioMensal)?`<div style="display:flex;gap:12px;flex-wrap:wrap">
+          ${s.valorSegurado?`<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:2px">Valor segurado</div><div style="font-size:12px;color:var(--text)">R$ ${parseFloat(s.valorSegurado).toLocaleString('pt-BR')}</div></div>`:''}
+          ${s.franquia?`<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:2px">Franquia</div><div style="font-size:12px;color:var(--text)">R$ ${parseFloat(s.franquia).toLocaleString('pt-BR')}</div></div>`:''}
+          ${s.premioMensal?`<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:2px">Prêmio mensal</div><div style="font-size:12px;color:var(--amber)">R$ ${parseFloat(s.premioMensal).toLocaleString('pt-BR')}${s.formaPagto?' ('+s.formaPagto+')':''}</div></div>`:''}
+        </div>`:''}
         </div>
         ${s.obs?`<div style="font-size:11px;color:var(--text2);background:var(--bg2);border-radius:7px;padding:7px 10px;border:1px solid var(--border);max-width:280px">${s.obs}</div>`:''}
       </div>
@@ -2334,6 +2339,25 @@ function openNovoSeguro(id){
         <input id="sg-cob" value="${s?.coberturas||''}" placeholder="Ex: Colisão, Furto, Incêndio, Danos a terceiros..."/>
       </div>
     </div>
+    <div style="height:1px;background:var(--border);margin-bottom:12px"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Valores do plano</div>
+    <div class="frow" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">Valor segurado (R$)</div><input id="sg-valorseg" type="number" value="${s?.valorSegurado||''}" placeholder="Ex: 50000"/></div>
+      <div class="fg"><div class="fl">Franquia (R$)</div><input id="sg-franquia" type="number" value="${s?.franquia||''}" placeholder="Ex: 3000"/></div>
+    </div>
+    <div class="frow" style="margin-bottom:10px">
+      <div class="fg"><div class="fl">Prêmio mensal (R$)</div><input id="sg-premio" type="number" value="${s?.premioMensal||''}" placeholder="Ex: 350"/></div>
+      <div class="fg"><div class="fl">Forma de pagamento</div>
+        <select id="sg-pagto">
+          <option value="" ${!s?.formaPagto?'selected':''}>Selecione...</option>
+          <option value="Mensal" ${s?.formaPagto==='Mensal'?'selected':''}>Mensal</option>
+          <option value="Trimestral" ${s?.formaPagto==='Trimestral'?'selected':''}>Trimestral</option>
+          <option value="Semestral" ${s?.formaPagto==='Semestral'?'selected':''}>Semestral</option>
+          <option value="Anual" ${s?.formaPagto==='Anual'?'selected':''}>Anual</option>
+          <option value="À vista" ${s?.formaPagto==='À vista'?'selected':''}>À vista</option>
+        </select>
+      </div>
+    </div>
     <div class="frow full" style="margin-bottom:14px">
       <div class="fg"><div class="fl">Observações</div>
         <textarea id="sg-obs" style="min-height:60px" placeholder="Contato do corretor, condições especiais, sinistros anteriores...">${s?.obs||''}</textarea>
@@ -2370,6 +2394,10 @@ function salvarSeguro(){
     inicioVigencia:document.getElementById('sg-ini').value,
     fimVigencia:document.getElementById('sg-fim').value,
     coberturas:document.getElementById('sg-cob').value.trim(),
+    valorSegurado:document.getElementById('sg-valorseg').value||null,
+    franquia:document.getElementById('sg-franquia').value||null,
+    premioMensal:document.getElementById('sg-premio').value||null,
+    formaPagto:document.getElementById('sg-pagto').value||null,
     obs:document.getElementById('sg-obs').value.trim(),
     criadoEm:new Date().toLocaleDateString('pt-BR')
   };
