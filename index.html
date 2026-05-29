@@ -2229,6 +2229,7 @@ function renderListaSeguros(lista){
         </div>
       </div>
       <!-- Dados em grade -->
+      <!-- Grade principal: associado + apólice -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--border)">
         ${[
           ['Associado',s.nomeSegurado||'—'],
@@ -2242,6 +2243,21 @@ function renderListaSeguros(lista){
           <div style="font-size:12px;font-weight:500;color:var(--text)">${v}</div>
         </div>`).join('')}
       </div>
+      <!-- Grade financeira: valores em destaque -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--border);background:var(--bg2)">
+        <div style="padding:10px 14px;border-right:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:3px">Valor protegido</div>
+          <div style="font-size:13px;font-weight:700;color:var(--green)">${s.valorSegurado?'R$ '+parseFloat(s.valorSegurado).toLocaleString('pt-BR'):'—'}</div>
+        </div>
+        <div style="padding:10px 14px;border-right:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:3px">Franquia</div>
+          <div style="font-size:13px;font-weight:700;color:var(--red)">${s.franquia?'R$ '+parseFloat(s.franquia).toLocaleString('pt-BR'):'—'}</div>
+        </div>
+        <div style="padding:10px 14px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:3px">Prêmio mensal</div>
+          <div style="font-size:13px;font-weight:700;color:var(--amber)">${s.premioMensal?'R$ '+parseFloat(s.premioMensal).toLocaleString('pt-BR')+(s.formaPagto?' ('+s.formaPagto+')':''):'—'}</div>
+        </div>
+      </div>
       <!-- Vigência + coberturas -->
       <div style="padding:10px 14px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div style="display:flex;gap:16px;flex-wrap:wrap">
@@ -2253,11 +2269,6 @@ function renderListaSeguros(lista){
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:2px">Coberturas</div>
             <div style="font-size:12px;color:var(--text2)">${s.coberturas}</div>
           </div>`:''}
-        ${(s.valorSegurado||s.franquia||s.premioMensal)?`<div style="display:flex;gap:12px;flex-wrap:wrap">
-          ${s.valorSegurado?`<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:2px">Valor segurado</div><div style="font-size:12px;color:var(--text)">R$ ${parseFloat(s.valorSegurado).toLocaleString('pt-BR')}</div></div>`:''}
-          ${s.franquia?`<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:2px">Franquia</div><div style="font-size:12px;color:var(--text)">R$ ${parseFloat(s.franquia).toLocaleString('pt-BR')}</div></div>`:''}
-          ${s.premioMensal?`<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:2px">Prêmio mensal</div><div style="font-size:12px;color:var(--amber)">R$ ${parseFloat(s.premioMensal).toLocaleString('pt-BR')}${s.formaPagto?' ('+s.formaPagto+')':''}</div></div>`:''}
-        </div>`:''}
         </div>
         ${s.obs?`<div style="font-size:11px;color:var(--text2);background:var(--bg2);border-radius:7px;padding:7px 10px;border:1px solid var(--border);max-width:280px">${s.obs}</div>`:''}
       </div>
