@@ -2213,7 +2213,7 @@ function renderListaSeguros(lista){
     return`<div style="background:var(--bg1);border:1px solid var(--border);border-radius:11px;overflow:hidden">
       <!-- Cabeçalho do card -->
       <div style="padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1" onclick="verFichaAssociado('${s.id}')">
           <div style="width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🚗</div>
           <div>
             <div style="font-size:14px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">${s.placa||'Sem placa'} — ${[s.marca,s.modelo,s.ano].filter(Boolean).join(' ')||'Veículo não identificado'}</div>
@@ -2270,6 +2270,77 @@ function renderListaSeguros(lista){
   }).join('')+`</div>`;
 }
 
+function verFichaAssociado(id){
+  const lista=load(KSEG);
+  const s=lista.find(x=>x.id===id);if(!s)return;
+  const tipoColor={'Compreensivo':'var(--green)','Terceiros':'var(--blue)','Incêndio e Roubo':'var(--amber)','Total':'var(--purple)','Outros':'var(--text3)'};
+  const cor=tipoColor[s.tipoApolice]||'var(--text3)';
+  const hoje=new Date();
+  const fimDate=s.fimVigencia?new Date(s.fimVigencia):null;
+  const diasRestantes=fimDate?Math.ceil((fimDate-hoje)/(1000*60*60*24)):null;
+  const statusVig=diasRestantes===null?''
+    :diasRestantes<0?'<span style="color:var(--red);font-size:11px;font-weight:600">⚠ VENCIDA</span>'
+    :diasRestantes<=30?`<span style="color:var(--amber);font-size:11px;font-weight:600">⚠ Vence em ${diasRestantes} dias</span>`
+    :`<span style="color:var(--green);font-size:11px;font-weight:600">✓ Vigente (${diasRestantes} dias)</span>`;
+
+  document.getElementById('ficha-title').textContent=(s.placa||'Sem placa')+' — '+(s.nomeSegurado||'Associado');
+  document.getElementById('ficha-body').innerHTML=`
+    <div class="ficha-section">
+      <div class="ficha-section-title">Veículo</div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">Placa</div><div class="ficha-value" style="font-family:'JetBrains Mono',monospace">${s.placa||'—'}</div></div>
+        <div class="ficha-field"><div class="ficha-label">Cor</div><div class="ficha-value">${s.cor||'—'}</div></div>
+      </div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">Marca / Modelo</div><div class="ficha-value">${[s.marca,s.modelo].filter(Boolean).join(' ')||'—'}</div></div>
+        <div class="ficha-field"><div class="ficha-label">Ano</div><div class="ficha-value">${s.ano||'—'}</div></div>
+      </div>
+      <div class="ficha-field" style="margin-bottom:8px"><div class="ficha-label">Chassi</div><div class="ficha-value" style="font-family:'JetBrains Mono',monospace;font-size:11px">${s.chassi||'—'}</div></div>
+    </div>
+    <div class="ficha-section">
+      <div class="ficha-section-title">Associado</div>
+      <div class="ficha-field" style="margin-bottom:8px"><div class="ficha-label">Nome</div><div class="ficha-value">${s.nomeSegurado||'—'}</div></div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">CPF / CNPJ</div><div class="ficha-value">${s.cpfSegurado||'—'}</div></div>
+        <div class="ficha-field"><div class="ficha-label">Telefone</div><div class="ficha-value">${s.telSegurado||'—'}</div></div>
+      </div>
+    </div>
+    <div class="ficha-section">
+      <div class="ficha-section-title">Apólice</div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">Associação</div><div class="ficha-value">${s.seguradora||'—'}</div></div>
+        <div class="ficha-field"><div class="ficha-label">Nº da apólice</div><div class="ficha-value" style="font-family:'JetBrains Mono',monospace;font-size:11px">${s.apolice||'—'}</div></div>
+      </div>
+      <div class="ficha-row">
+        <div class="ficha-field"><div class="ficha-label">Tipo</div><div class="ficha-value" style="color:${cor};font-weight:600">${s.tipoApolice||'—'}</div></div>
+        <div class="ficha-field"><div class="ficha-label">Situação</div><div class="ficha-value">${statusVig||'—'}</div></div>
+      </div>
+      <div class="ficha-field" style="margin-bottom:8px">
+        <div class="ficha-label">Vigência</div>
+        <div class="ficha-value">${s.inicioVigencia||'—'} → ${s.fimVigencia||'—'}</div>
+      </div>
+      ${s.coberturas?`<div class="ficha-field" style="margin-bottom:8px"><div class="ficha-label">Coberturas</div><div class="ficha-value" style="font-size:12px;line-height:1.5">${s.coberturas}</div></div>`:''}
+    </div>
+    ${(s.valorSegurado||s.franquia||s.premioMensal)?`<div class="ficha-section">
+      <div class="ficha-section-title">Valores do plano</div>
+      <div class="ficha-row">
+        ${s.valorSegurado?`<div class="ficha-field"><div class="ficha-label">Valor segurado</div><div class="ficha-value">R$ ${parseFloat(s.valorSegurado).toLocaleString('pt-BR')}</div></div>`:''}
+        ${s.franquia?`<div class="ficha-field"><div class="ficha-label">Franquia</div><div class="ficha-value">R$ ${parseFloat(s.franquia).toLocaleString('pt-BR')}</div></div>`:''}
+      </div>
+      ${s.premioMensal?`<div class="ficha-field" style="margin-bottom:8px"><div class="ficha-label">Prêmio mensal</div><div class="ficha-value" style="color:var(--amber);font-weight:600">R$ ${parseFloat(s.premioMensal).toLocaleString('pt-BR')}${s.formaPagto?' ('+s.formaPagto+')':''}</div></div>`:''}
+    </div>`:''}
+    ${s.obs?`<div class="ficha-section">
+      <div class="ficha-section-title">Observações</div>
+      <div class="ficha-field"><div class="ficha-value" style="font-size:12px;line-height:1.5">${s.obs}</div></div>
+    </div>`:''}
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="btn-p" onclick="closeFicha();openNovoSeguro('${s.id}')">✏️ Editar</button>
+      <button class="btn-g" onclick="closeFicha()">Fechar</button>
+    </div>
+  `;
+  document.getElementById('ficha-panel').classList.add('open');
+  document.getElementById('ficha-overlay').classList.add('open');
+}
 function filtrarSeguros(){
   const q=(document.getElementById('seg-search')?.value||'').toLowerCase();
   const ft=document.getElementById('seg-filter-tipo')?.value||'';
