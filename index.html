@@ -299,15 +299,15 @@ const initials=n=>(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(
 
 // ══ ROLES ══════════════════════════════════════════════════════
 const ROLES={
-  admin:    {label:'Administrador',color:'#E8A020',bg:'#2A1E05',nav:['estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','usuarios','perfil']},
-  gerente:  {label:'Gerente',      color:'#f5a623',bg:'#2a1f0a',nav:['estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','perfil']},
-  vendedor: {label:'Vendedor',     color:'#a78bfa',bg:'#1a1030',nav:['estoque','fotos','vendas','vistoria','anuncios','orcamentos','perfil']},
-  rh:       {label:'RH',           color:'#4a9eff',bg:'#0a1a2a',nav:['vendedores','usuarios','relatorio','perfil']},
-  financeiro:{label:'Financeiro',  color:'#e05252',bg:'#2a0f0f',nav:['vendas','orcamentos','relatorio','backup','perfil']},
-  visualizador:{label:'Visualizador',color:'#8899b0',bg:'#1e2535',nav:['estoque','relatorio','perfil']},
+  admin:    {label:'Administrador',color:'#E8A020',bg:'#2A1E05',nav:['dashboard','estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','usuarios','perfil']},
+  gerente:  {label:'Gerente',      color:'#f5a623',bg:'#2a1f0a',nav:['dashboard','estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','perfil']},
+  vendedor: {label:'Vendedor',     color:'#a78bfa',bg:'#1a1030',nav:['dashboard','estoque','fotos','vendas','vistoria','anuncios','orcamentos','perfil']},
+  rh:       {label:'RH',           color:'#4a9eff',bg:'#0a1a2a',nav:['dashboard','vendedores','usuarios','relatorio','perfil']},
+  financeiro:{label:'Financeiro',  color:'#e05252',bg:'#2a0f0f',nav:['dashboard','vendas','orcamentos','relatorio','backup','perfil']},
+  visualizador:{label:'Visualizador',color:'#8899b0',bg:'#1e2535',nav:['dashboard','estoque','relatorio','perfil']},
 };
-const NAV_LABELS={estoque:'Estoque',cadastro:'+ Veículo',fotos:'Fotos',documentos:'Documentos',vendas:'Vendas',vistoria:'⚡ Vistoria',vendedores:'Vendedores',anuncios:'Anúncios',orcamentos:'Orçamentos',seguradora:'Associação',relatorio:'Relatório',backup:'💾 Backup',usuarios:'Usuários',perfil:'Meu Perfil'};
-const NAV_ORDER=['estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','usuarios','perfil'];
+const NAV_LABELS={dashboard:'🏠 Início',estoque:'Estoque',cadastro:'+ Veículo',fotos:'Fotos',documentos:'Documentos',vendas:'Vendas',vistoria:'⚡ Vistoria',vendedores:'Vendedores',anuncios:'Anúncios',orcamentos:'Orçamentos',seguradora:'Associação',relatorio:'Relatório',backup:'💾 Backup',usuarios:'Usuários',perfil:'Meu Perfil'};
+const NAV_ORDER=['dashboard','estoque','cadastro','fotos','documentos','vendas','vistoria','vendedores','anuncios','orcamentos','seguradora','relatorio','backup','usuarios','perfil'];
 
 // ══ SESSION ════════════════════════════════════════════════════
 let CU=null;
@@ -515,6 +515,7 @@ function initApp(){
   showSec(first);
 }
 
+document.addEventListener('navTo', e=>showSec(e.detail));
 function showSec(id){
   if(!can(id)){document.getElementById('main-content').innerHTML='<div class="no-access"><div style="font-size:40px;margin-bottom:12px">🔒</div><div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">Acesso restrito</div><div style="font-size:13px;color:var(--text3)">Você não tem permissão para este módulo.</div></div>';return}
   document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('active',b.textContent===NAV_LABELS[id]));
@@ -592,7 +593,7 @@ async function renderEstoque(sec){
     <h3>Veículos em estoque</h3>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <input id="est-s" placeholder="Buscar..." style="width:150px;font-size:12px;padding:6px 9px" oninput="filterEst()"/>
-      <select id="est-st" style="font-size:12px;padding:6px 9px" onchange="filterEst()"><option value="">Todos status</option><option value="disponivel">Disponível</option><option value="vendido">Vendido</option></select>
+      <select id="est-st" style="font-size:12px;padding:6px 9px" onchange="filterEst()"><option value="">Todos status</option><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select>
       ${can('cadastro')?`<button class="btn-p" onclick="showSec('cadastro')">+ Veículo</button>`:''}
     </div>
   </div>
@@ -632,6 +633,7 @@ function filterEst(){
       <div class="vinfo">
         <div class="vname" onclick="verFichaVeh('${v.id}')" style="cursor:pointer">${v.marca} ${v.modelo} ${v.ano}</div>
         <div class="vdetail">${v.avaria||''}${v.km?' · '+v.km+' km':''}${v.cor?' · '+v.cor:''}</div>
+        ${(()=>{const docs=load(KD).filter(d=>d.veiculoId===v.id);const total=10;const ok=docs.filter(d=>d.status==='ok').length;const pend=docs.filter(d=>d.status==='pendente').length;const falt=total-ok-pend;if(!docs.length)return'';const cor=falt>3?'var(--red)':falt>0?'var(--amber)':'var(--green)';return`<div style="display:flex;align-items:center;gap:4px;margin-top:3px"><span style="font-size:9px;color:${cor}">●</span><span style="font-size:10px;color:var(--text3)">${ok} doc${ok!==1?'s':''} OK${pend>0?' · '+pend+' pendente'+( pend!==1?'s':''):''}${falt>0?' · '+falt+' faltando':''}</span></div>`;})()}
         ${(v.itens&&(Array.isArray(v.itens)?v.itens.length:v.itens))?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${(Array.isArray(v.itens)?v.itens:String(v.itens).split(',').map(s=>s.trim())).map(it=>`<span style="font-size:9px;background:rgba(232,160,32,0.1);border:1px solid rgba(232,160,32,0.25);color:var(--amber);padding:1px 6px;border-radius:4px">✓ ${it}</span>`).join('')}</div>`:''}
         ${(v.valorVenda||v.valor_venda)?`<div class="vprice">${fmtR(v.valorVenda||v.valor_venda)}</div>`:''}
         ${seller?`<div class="vseller">👤 ${seller}</div>`:''}
@@ -952,7 +954,7 @@ function renderCadastro(sec){
     <div class="frow full"><div class="fg"><div class="fl">Descrição da avaria</div><textarea id="f-descavaria" placeholder="Peças comprometidas, condição do motor..."></textarea></div></div>
     <div class="frow three"><div class="fg"><div class="fl">Valor compra (R$)</div><input id="f-compra" placeholder="45.000"/></div>
     <div class="fg"><div class="fl">Valor venda (R$)</div><input id="f-venda" placeholder="58.000"/></div>
-    <div class="fg"><div class="fl">Status</div><select id="f-status"><option value="disponivel">Disponível</option><option value="vendido">Vendido</option></select></div></div>
+    <div class="fg"><div class="fl">Status</div><select id="f-status"><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div></div>
     <div class="frow full"><div class="fg">
       <div class="fl">Itens do veículo <span style="font-size:10px;color:var(--text3)">(marque o que acompanha)</span></div>
       <div id="f-itens-wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px"><label id="item-0" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleItem(this)"><input type="checkbox" value="Chave" style="display:none"/><span style="width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s"></span>Chave</label><label id="item-1" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleItem(this)"><input type="checkbox" value="Chave cópia" style="display:none"/><span style="width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s"></span>Chave cópia</label><label id="item-2" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleItem(this)"><input type="checkbox" value="Manual" style="display:none"/><span style="width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s"></span>Manual</label><label id="item-3" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleItem(this)"><input type="checkbox" value="Bateria" style="display:none"/><span style="width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s"></span>Bateria</label><label id="item-4" style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none" onclick="toggleItem(this)"><input type="checkbox" value="Estepe" style="display:none"/><span style="width:14px;height:14px;border-radius:3px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s"></span>Estepe</label></div>
@@ -2004,8 +2006,127 @@ function restaurarBackup(input){
   input.value='';
 }
 
+
+function renderBadgeAlerta(n){
+  return '<span style="font-size:10px;background:var(--redbg);color:var(--red);padding:2px 8px;border-radius:10px;border:1px solid var(--red)">'+n+' alerta'+(n!==1?'s':'')+'</span>';
+}
+function renderListaAlertasVig(alertas,hoje){
+  if(!alertas.length) return '<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px 0">✅ Nenhuma vigência vencendo nos próximos 30 dias</div>';
+  let html=alertas.slice(0,4).map(function(s){
+    const dias=Math.ceil((new Date(s.fimVigencia)-hoje)/(1000*60*60*24));
+    const cor=dias<=7?'var(--red)':'var(--amber)';
+    const label=dias<0?'Vencida há '+Math.abs(dias)+' dias':dias===0?'Vence hoje':'Vence em '+dias+' dias';
+    return '<div onclick="document.dispatchEvent(new CustomEvent(\'navTo\',{detail:\'seguradora\'}))" style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg2);border-radius:7px;margin-bottom:6px;cursor:pointer;border:1px solid var(--border)">'
+      +'<div><div style="font-size:12px;font-weight:600;color:var(--text)">'+(s.placa||'—')+' — '+(s.nomeSegurado||'—')+'</div>'
+      +'<div style="font-size:10px;color:var(--text3)">'+(s.seguradora||'—')+' · '+s.fimVigencia+'</div></div>'
+      +'<span style="font-size:10px;font-weight:700;color:'+cor+';white-space:nowrap;margin-left:8px">'+label+'</span></div>';
+  }).join('');
+  if(alertas.length>4) html+='<div onclick="document.dispatchEvent(new CustomEvent(\'navTo\',{detail:\'seguradora\'}))" style="font-size:11px;color:var(--amber);text-align:center;cursor:pointer;margin-top:4px">Ver todos →</div>';
+  return html;
+}
+async function renderDashboard(sec){
+  const hoje=new Date();
+  const mesAtual=hoje.getMonth(),anoAtual=hoje.getFullYear();
+  if(CU?.fromServer){
+    try{
+      const [dv,dvn]=await Promise.all([apiRequest('GET','/api/veiculos'),apiRequest('GET','/api/vendas')]);
+      if(dv?.veiculos){
+        const local=load(KV);
+        const merged=dv.veiculos.map(sv=>{const lv=local.find(x=>x.id===sv.id);return lv?{...sv,capaId:lv.capaId||null,capaUrl:lv.capaUrl||null,valorCompra:sv.valorCompra||sv.valor_compra||'',valorVenda:sv.valorVenda||sv.valor_venda||'',renavam:sv.renavam||'',itens:sv.itens||(lv?.itens||[])}:sv;});
+        save(KV,merged);
+      }
+      if(dvn?.vendas)save(KVN,dvn.vendas);
+    }catch(e){}
+  }
+  const veiculos=load(KV),vendas=load(KVN),seguros=load(KSEG);
+  const disponiveis=veiculos.filter(v=>v.status==='disponivel').length;
+  const reservados=veiculos.filter(v=>v.status==='reservado').length;
+  const vendidos=veiculos.filter(v=>v.status==='vendido').length;
+  const total=veiculos.length;
+  const vendasMes=vendas.filter(v=>{const d=new Date(v.data||v.criadoEm);return d.getMonth()===mesAtual&&d.getFullYear()===anoAtual;});
+  const faturamentoMes=vendasMes.reduce((a,v)=>a+parseFloat(String(v.valor||0).replace(/[R$ .]/g,'').replace(',','.'))||0,0);
+  const valorEstoque=veiculos.filter(v=>v.status==='disponivel').reduce((a,v)=>a+parseFloat(String(v.valorVenda||v.valor_venda||0).replace(/[R$ .]/g,'').replace(',','.'))||0,0);
+  const docsAll=load(KD);
+  const docsPend=docsAll.filter(d=>d.status==='pendente'||d.status==='faltando').length;
+  const alertasVig=seguros.filter(s=>{if(!s.fimVigencia)return false;const dias=Math.ceil((new Date(s.fimVigencia)-hoje)/(1000*60*60*24));return dias<=30&&dias>=-7;}).sort((a,b)=>new Date(a.fimVigencia)-new Date(b.fimVigencia));
+  const ultVendas=vendas.slice().sort((a,b)=>new Date(b.data||b.criadoEm)-new Date(a.data||a.criadoEm)).slice(0,5);
+  const ultVeiculos=veiculos.filter(v=>v.status==='disponivel').slice(0,4);
+  const h=hoje.getHours();
+  const saud=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+
+  const cardStyle=(cor)=>`background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:border-color .2s`;
+
+  sec.innerHTML=`
+  <div style="padding:0 0 24px">
+    <div style="margin-bottom:20px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--text)">${saud}, ${CU?.nome?.split(' ')[0]||''}! 👋</div>
+      <div style="font-size:13px;color:var(--text3);margin-top:2px">${hoje.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+      ${[
+        {label:'Disponíveis',valor:disponiveis,cor:'var(--green)',icon:'🚗',sub:total+' total no pátio',click:"showSec('estoque');setTimeout(()=>{document.getElementById('est-st').value='disponivel';filterEst()},100)"},
+        {label:'Reservados',valor:reservados,cor:'var(--amber)',icon:'🔖',sub:'aguardando fechamento',click:"showSec('estoque');setTimeout(()=>{document.getElementById('est-st').value='reservado';filterEst()},100)"},
+        {label:'Vendidos',valor:vendidos,cor:'var(--blue)',icon:'✅',sub:'veículos vendidos',click:"showSec('estoque');setTimeout(()=>{document.getElementById('est-st').value='vendido';filterEst()},100)"},
+        {label:'Docs pendentes',valor:docsPend,cor:docsPend>0?'var(--red)':'var(--green)',icon:'📄',sub:'documentos faltando',click:"showSec('documentos')"},
+      ].map(c=>`<div onclick="${c.click}" style="${cardStyle(c.cor)}" onmouseover="this.style.borderColor='${c.cor}'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:22px">${c.icon}</span>
+          <span style="font-size:10px;color:var(--text3)">${c.sub}</span>
+        </div>
+        <div style="font-size:36px;font-weight:800;font-family:'Barlow Condensed',sans-serif;color:${c.cor};line-height:1">${c.valor}</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text);margin-top:6px">${c.label}</div>
+      </div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px">💰 Financeiro do mês</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:var(--bg2);border-radius:8px;padding:12px">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Faturamento</div>
+            <div style="font-size:22px;font-weight:800;font-family:'Barlow Condensed',sans-serif;color:var(--green)">${fmtR(faturamentoMes)}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">${vendasMes.length} venda${vendasMes.length!==1?'s':''}</div>
+          </div>
+          <div style="background:var(--bg2);border-radius:8px;padding:12px">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Valor em estoque</div>
+            <div style="font-size:22px;font-weight:800;font-family:'Barlow Condensed',sans-serif;color:var(--amber)">${fmtR(valorEstoque)}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">${disponiveis} disponível${disponiveis!==1?'s':''}</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">🛡️ Alertas de vigência</div>
+          ${alertasVig.length ? renderBadgeAlerta(alertasVig.length) : ''}
+        </div>
+        ${renderListaAlertasVig(alertasVig,hoje)}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">🚗 Estoque disponível</div>
+          <span onclick="showSec('estoque')" style="font-size:11px;color:var(--amber);cursor:pointer">Ver tudo →</span>
+        </div>
+        ${ultVeiculos.length===0?'<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px 0">Nenhum veículo disponível</div>'
+          :ultVeiculos.map(v=>{const capa=getFotoCapa(v.id);return '<div onclick="verFichaVeh(&quot;'+v.id+'&quot;)" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer"><div style="width:44px;height:34px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg3)">'+(capa?'<img src="'+capa+'" style="width:100%;height:100%;object-fit:cover"/>'
+            :'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px">🚗</div>')+'</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+v.marca+' '+v.modelo+' '+(v.ano||'')+'</div><div style="font-size:10px;color:var(--text3)">'+(v.placa||'Sem placa')+(v.km?' · '+v.km+' km':'')+'</div></div>'+((v.valorVenda||v.valor_venda)?'<div style="font-size:12px;font-weight:700;color:var(--green);white-space:nowrap">'+fmtR(v.valorVenda||v.valor_venda)+'</div>':'')+'</div>';}).join('')
+        }
+      </div>
+      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">💸 Últimas vendas</div>
+          <span onclick="showSec('vendas')" style="font-size:11px;color:var(--amber);cursor:pointer">Ver tudo →</span>
+        </div>
+        ${ultVendas.length===0?'<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px 0">Nenhuma venda registrada</div>'
+          :ultVendas.map(v=>{const veh=veiculos.find(x=>x.id===v.veiculoId);return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:12px;font-weight:600;color:var(--text)">'+(veh?veh.marca+' '+veh.modelo:v.veiculoId?.slice(0,8)||'—')+'</div><div style="font-size:10px;color:var(--text3)">'+(v.compradorNome||v.comprador_nome||'—')+' · '+(v.data||v.criadoEm||'—')+'</div></div><div style="font-size:13px;font-weight:700;color:var(--green)">'+fmtR(v.valor)+'</div></div>';}).join('')
+        }
+      </div>
+    </div>
+  </div>`;
+}
+
 const RENDERS={
-  estoque:renderEstoque,cadastro:renderCadastro,fotos:renderFotos,documentos:renderDocumentos,
+  dashboard:renderDashboard,estoque:renderEstoque,cadastro:renderCadastro,fotos:renderFotos,documentos:renderDocumentos,
   vendas:renderVendas,vistoria:renderVistoria,vendedores:renderVendedores,anuncios:renderAnuncios,
   orcamentos:renderOrcamentos,seguradora:renderSeguradora,
   relatorio:renderRelatorio,backup:renderBackup,usuarios:renderUsuarios,perfil:renderPerfil
