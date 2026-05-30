@@ -215,6 +215,7 @@ textarea{resize:vertical;min-height:64px}
 .no-access{text-align:center;padding:60px 20px}
 .tag-chip{display:inline-flex;font-size:10px;padding:2px 7px;border-radius:20px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -262,7 +263,7 @@ textarea{resize:vertical;min-height:64px}
 <script>
 'use strict';
 // ══ STORAGE ═══════════════════════════════════════════════════
-const KV='ag4_v',KD='ag4_d',KVN='ag4_vn',KA='ag4_a',KF='ag4_f',KS='ag4_s',KU='ag4_u',KOR='ag4_orc',KSEG='ag4_seg';
+const KV='ag4_v',KD='ag4_d',KVN='ag4_vn',KA='ag4_a',KF='ag4_f',KS='ag4_s',KU='ag4_u',KOR='ag4_orc',KSEG='ag4_seg',KSIN='ag4_sin';
 // Seed de associados para teste — remove após testes reais
 (function seedAssociados(){
   if(localStorage.getItem('ag4_seg_seeded'))return;
@@ -749,6 +750,9 @@ async function verFichaVeh(id){
       <div class="ficha-section-title">Observações</div>
       <div class="ficha-field"><div class="ficha-value" style="font-size:12px;line-height:1.5">${v.obs}</div></div>
     </div>`:''}
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-g" onclick="exportarFichaVeiculo('${id}')">📄 Exportar PDF</button>
+    </div>
   `;
 }
 async function excluirVeh(id){
@@ -2149,6 +2153,220 @@ async function renderDashboard(sec){
   </div>`;
 }
 
+// ══ SINISTROS ════════════════════════════════════════════════════
+function renderSinistros(segId){
+  var sins=load(KSIN).filter(function(s){return s.segId===segId;});
+  if(!sins.length) return '<div style="color:var(--text3);font-size:12px;padding:8px 0">Nenhum sinistro registrado.</div>';
+  return sins.map(function(s){
+    var corStatus=s.status==='encerrado'?'var(--green)':s.status==='em andamento'?'var(--amber)':'var(--blue)';
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text)">'+s.tipo+'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px">'
+      +'<span style="font-size:10px;color:'+corStatus+';font-weight:600">'+s.status+'</span>'
+      +'<button onclick="excluirSinistro(\''+s.id+'\',\''+segId+'\')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px">x</button>'
+      +'</div></div>'
+      +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+      +(s.data?'<div><div style="font-size:10px;color:var(--text3)">Data</div><div style="font-size:11px;color:var(--text2)">'+s.data+'</div></div>':'')
+      +(s.valorPago?'<div><div style="font-size:10px;color:var(--text3)">Valor pago</div><div style="font-size:11px;color:var(--green)">R$ '+parseFloat(s.valorPago).toLocaleString('pt-BR')+'</div></div>':'')
+      +(s.protocolo?'<div><div style="font-size:10px;color:var(--text3)">Protocolo</div><div style="font-size:11px;color:var(--text2)">'+s.protocolo+'</div></div>':'')
+      +'</div>'
+      +(s.descricao?'<div style="font-size:11px;color:var(--text2);margin-top:6px;line-height:1.4">'+s.descricao+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+function abrirNovoSinistro(segId){
+  openModal('Registrar sinistro',
+    '<div class="fg" style="margin-bottom:10px"><div class="fl">Tipo de ocorrência</div>'
+    +'<select id="sin-tipo"><option>Colisão</option><option>Furto</option><option>Roubo</option>'
+    +'<option>Incêndio</option><option>Alagamento</option><option>Vidros</option>'
+    +'<option>Responsabilidade Civil</option><option>Outros</option></select></div>'
+    +'<div class="frow"><div class="fg"><div class="fl">Data da ocorrência</div><input type="date" id="sin-data"/></div>'
+    +'<div class="fg"><div class="fl">Status</div><select id="sin-status">'
+    +'<option value="aberto">Aberto</option><option value="em andamento">Em andamento</option>'
+    +'<option value="encerrado">Encerrado</option></select></div></div>'
+    +'<div class="frow"><div class="fg"><div class="fl">Valor pago (R$)</div><input type="number" id="sin-valor" placeholder="0"/></div>'
+    +'<div class="fg"><div class="fl">Nr Protocolo</div><input id="sin-prot" placeholder="Protocolo..."/></div></div>'
+    +'<div class="fg" style="margin-bottom:14px"><div class="fl">Descricao</div>'
+    +'<textarea id="sin-desc" style="min-height:70px" placeholder="Descreva o ocorrido..."></textarea></div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn-p" onclick="salvarSinistro(\''+segId+'\')">Salvar</button>'
+    +'<button class="btn-g" onclick="closeMD()">Cancelar</button></div>'
+  );
+}
+
+function salvarSinistro(segId){
+  var sin={
+    id:uid(), segId:segId,
+    tipo:document.getElementById('sin-tipo').value,
+    data:document.getElementById('sin-data').value,
+    status:document.getElementById('sin-status').value,
+    valorPago:document.getElementById('sin-valor').value||null,
+    protocolo:document.getElementById('sin-prot').value.trim(),
+    descricao:document.getElementById('sin-desc').value.trim(),
+    criadoEm:new Date().toLocaleDateString('pt-BR')
+  };
+  var lista=load(KSIN); lista.push(sin); save(KSIN,lista);
+  closeMD(); toast('Sinistro registrado!');
+  var el=document.getElementById('lista-sinistros-'+segId);
+  if(el) el.innerHTML=renderSinistros(segId);
+}
+
+function excluirSinistro(id,segId){
+  if(!confirm('Remover este sinistro?'))return;
+  save(KSIN,load(KSIN).filter(function(s){return s.id!==id;}));
+  toast('Sinistro removido');
+  var el=document.getElementById('lista-sinistros-'+segId);
+  if(el) el.innerHTML=renderSinistros(segId);
+}
+
+// ══ EXPORTAR PDF ════════════════════════════════════════════════
+async function exportarFichaVeiculo(id){
+  var vs=load(KV); var v=vs.find(function(x){return x.id===id;}); if(!v)return;
+  var docs=load(KD).filter(function(d){return d.veiculoId===id;});
+  var sellers=load(KS); var seller=v.vendedorId?sellers.find(function(s){return s.id===v.vendedorId;}):null;
+  var itensArr=Array.isArray(v.itens)?v.itens:(v.itens?String(v.itens).split(',').map(function(s){return s.trim();}):[]);
+
+  var jsPDFLib=window.jspdf; if(!jsPDFLib){toast('Aguarde o carregamento do PDF...','#f5a623');return;}
+  var doc=new jsPDFLib.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var W=210,M=15,y=15;
+
+  doc.setFillColor(232,160,32); doc.rect(0,0,W,18,'F');
+  doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.setTextColor(10,10,11);
+  doc.text('N2 AutoSYS - Ficha do Veiculo',M,12);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(new Date().toLocaleDateString('pt-BR'),W-M,12,{align:'right'});
+  y=24;
+
+  doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.setTextColor(240,239,232);
+  doc.setFillColor(17,17,20); doc.rect(0,y-5,W,12,'F');
+  doc.text((v.marca||'')+' '+(v.modelo||'')+' '+(v.ano||''),M,y+3);
+  if(v.placa){doc.setFontSize(11);doc.setFont('helvetica','normal');doc.setTextColor(200,160,50);doc.text(v.placa,W-M,y+3,{align:'right'});}
+  y+=14;
+
+  function linha(label,valor,x,yy){
+    doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);doc.text(label,x,yy);
+    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);doc.text(String(valor||'-'),x,yy+5);
+  }
+  function secTitulo(titulo,yy){
+    doc.setFillColor(240,239,232);doc.rect(M,yy-4,W-2*M,7,'F');
+    doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(10,10,11);
+    doc.text(titulo,M+2,yy+1);return yy+8;
+  }
+
+  y=secTitulo('IDENTIFICACAO',y);
+  linha('Tipo',v.tipo,M,y); linha('Status',v.status==='disponivel'?'Disponivel':v.status==='reservado'?'Reservado':'Vendido',M+50,y); linha('Cor',v.cor,M+100,y);
+  y+=14; linha('Chassi',v.chassi,M,y); linha('RENAVAM',v.renavam,M+100,y);
+  y+=14; linha('KM',v.km,M,y); linha('Local no patio',v.local||v.local_patio,M+50,y);
+  y+=14;
+
+  y=secTitulo('AVARIA',y);
+  linha('Tipo de avaria',v.avaria,M,y); linha('Nivel de dano',v.nivel_dano||v.dano,M+100,y); y+=14;
+  if(v.desc_avaria){doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text('Descricao:',M,y);y+=4;doc.setFontSize(9);doc.setTextColor(30,30,30);var dl=doc.splitTextToSize(v.desc_avaria,W-2*M);doc.text(dl,M,y);y+=dl.length*4+4;}
+
+  y=secTitulo('FINANCEIRO',y);
+  linha('Valor de compra',(v.valorCompra||v.valor_compra)?'R$ '+parseFloat(v.valorCompra||v.valor_compra).toLocaleString('pt-BR'):'-',M,y);
+  linha('Valor de venda',(v.valorVenda||v.valor_venda)?'R$ '+parseFloat(v.valorVenda||v.valor_venda).toLocaleString('pt-BR'):'-',M+90,y); y+=14;
+  if(seller){linha('Vendedor',seller.nome,M,y);y+=14;}
+
+  if(itensArr.length){y=secTitulo('ITENS DO VEICULO',y);doc.setFontSize(9);doc.setTextColor(30,30,30);doc.text(itensArr.map(function(i){return '+ '+i;}).join('   '),M,y+2);y+=10;}
+
+  if(docs.length){
+    y=secTitulo('DOCUMENTOS ('+docs.length+')',y);
+    docs.forEach(function(d){
+      if(y>270){doc.addPage();y=20;}
+      var stLabel=d.status==='ok'?'Recebido':d.status==='pendente'?'Pendente':'Faltando';
+      var stColor=d.status==='ok'?[52,192,128]:d.status==='pendente'?[232,160,32]:[224,82,82];
+      doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
+      doc.text('- '+d.nome,M,y);
+      doc.setFont('helvetica','bold');doc.setTextColor(stColor[0],stColor[1],stColor[2]);
+      doc.text(stLabel,W-M,y,{align:'right'});y+=5;
+    });y+=4;
+  }
+
+  if(v.obs){y=secTitulo('OBSERVACOES',y);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);var ol=doc.splitTextToSize(v.obs,W-2*M);doc.text(ol,M,y);y+=ol.length*4+6;}
+
+  doc.setFontSize(8);doc.setTextColor(150,150,150);
+  doc.text('Gerado pelo N2 AutoSYS - '+new Date().toLocaleString('pt-BR'),W/2,287,{align:'center'});
+  doc.save('ficha-'+(v.placa||v.modelo||'veiculo').replace(/\s/g,'-')+'.pdf');
+  toast('PDF gerado!');
+}
+
+async function exportarFichaAssociado(segId){
+  var lista=load(KSEG); var s=lista.find(function(x){return x.id===segId;}); if(!s)return;
+  var sins=load(KSIN).filter(function(x){return x.segId===segId;});
+
+  var jsPDFLib=window.jspdf; if(!jsPDFLib){toast('Aguarde o carregamento do PDF...','#f5a623');return;}
+  var doc=new jsPDFLib.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var W=210,M=15,y=15;
+
+  doc.setFillColor(232,160,32);doc.rect(0,0,W,18,'F');
+  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(10,10,11);
+  doc.text('N2 AutoSYS - Ficha do Associado',M,12);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text(new Date().toLocaleDateString('pt-BR'),W-M,12,{align:'right'});
+  y=24;
+
+  doc.setFontSize(15);doc.setFont('helvetica','bold');doc.setTextColor(240,239,232);
+  doc.setFillColor(17,17,20);doc.rect(0,y-5,W,12,'F');
+  doc.text((s.placa||'Sem placa')+' - '+(s.nomeSegurado||'Associado'),M,y+3);
+  y+=14;
+
+  function linha(label,valor,x,yy){
+    doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);doc.text(label,x,yy);
+    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);doc.text(String(valor||'-'),x,yy+5);
+  }
+  function secTitulo(titulo,yy){
+    doc.setFillColor(240,239,232);doc.rect(M,yy-4,W-2*M,7,'F');
+    doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(10,10,11);
+    doc.text(titulo,M+2,yy+1);return yy+8;
+  }
+
+  y=secTitulo('VEICULO',y);
+  linha('Marca / Modelo',[s.marca,s.modelo].filter(Boolean).join(' '),M,y);
+  linha('Ano',s.ano,M+70,y);linha('Cor',s.cor,M+110,y);y+=14;
+  linha('Chassi',s.chassi,M,y);y+=14;
+
+  y=secTitulo('ASSOCIADO',y);
+  linha('Nome',s.nomeSegurado,M,y);y+=14;
+  linha('CPF / CNPJ',s.cpfSegurado,M,y);linha('Telefone',s.telSegurado,M+90,y);y+=14;
+
+  y=secTitulo('APOLICE',y);
+  linha('Associacao',s.seguradora,M,y);linha('Nr Apolice',s.apolice,M+90,y);y+=14;
+  linha('Tipo',s.tipoApolice,M,y);linha('Vigencia',(s.inicioVigencia||'-')+' ate '+(s.fimVigencia||'-'),M+60,y);y+=14;
+  if(s.coberturas){doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text('Coberturas:',M,y);y+=4;doc.setFontSize(9);doc.setTextColor(30,30,30);var cl=doc.splitTextToSize(s.coberturas,W-2*M);doc.text(cl,M,y);y+=cl.length*4+4;}
+
+  y=secTitulo('VALORES DO PLANO',y);
+  linha('Valor protegido',s.valorSegurado?'R$ '+parseFloat(s.valorSegurado).toLocaleString('pt-BR'):'-',M,y);
+  linha('Franquia',s.franquia?'R$ '+parseFloat(s.franquia).toLocaleString('pt-BR'):'-',M+70,y);
+  linha('Premio mensal',s.premioMensal?'R$ '+parseFloat(s.premioMensal).toLocaleString('pt-BR')+(s.formaPagto?' ('+s.formaPagto+')':''):'-',M+130,y);y+=14;
+
+  if(sins.length){
+    y=secTitulo('HISTORICO DE SINISTROS ('+sins.length+')',y);
+    sins.forEach(function(sin){
+      if(y>260){doc.addPage();y=20;}
+      doc.setFillColor(245,244,238);doc.rect(M,y-3,W-2*M,16,'F');
+      doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);
+      doc.text(sin.tipo,M+2,y+3);
+      doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);
+      doc.text((sin.data||'-')+(sin.protocolo?' - Protocolo: '+sin.protocolo:'')+(sin.valorPago?' - Pago: R$ '+parseFloat(sin.valorPago).toLocaleString('pt-BR'):''),M+2,y+8);
+      var stColor=sin.status==='encerrado'?[52,192,128]:sin.status==='em andamento'?[232,160,32]:[100,150,220];
+      doc.setFont('helvetica','bold');doc.setTextColor(stColor[0],stColor[1],stColor[2]);
+      doc.text(sin.status,W-M,y+5,{align:'right'});y+=20;
+      if(sin.descricao){doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);var dl=doc.splitTextToSize(sin.descricao,W-2*M);doc.text(dl,M,y);y+=dl.length*4+4;}
+    });y+=4;
+  }
+
+  if(s.obs){y=secTitulo('OBSERVACOES',y);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);var ol=doc.splitTextToSize(s.obs,W-2*M);doc.text(ol,M,y);y+=ol.length*4+6;}
+
+  doc.setFontSize(8);doc.setTextColor(150,150,150);
+  doc.text('Gerado pelo N2 AutoSYS - '+new Date().toLocaleString('pt-BR'),W/2,287,{align:'center'});
+  doc.save('associado-'+(s.placa||s.nomeSegurado||'ficha').replace(/\s/g,'-')+'.pdf');
+  toast('PDF gerado!');
+}
+
+
 const RENDERS={
   dashboard:renderDashboard,estoque:renderEstoque,cadastro:renderCadastro,fotos:renderFotos,documentos:renderDocumentos,
   vendas:renderVendas,vistoria:renderVistoria,vendedores:renderVendedores,anuncios:renderAnuncios,
@@ -2489,8 +2707,16 @@ function verFichaAssociado(id){
       <div class="ficha-section-title">Observações</div>
       <div class="ficha-field"><div class="ficha-value" style="font-size:12px;line-height:1.5">${s.obs}</div></div>
     </div>`:''}
-    <div style="margin-top:16px;display:flex;gap:8px">
+    <div class="ficha-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="ficha-section-title" style="margin-bottom:0">🚨 Histórico de sinistros</div>
+        <button class="btn-p" style="font-size:11px;padding:4px 10px" onclick="abrirNovoSinistro('${s.id}')">+ Registrar</button>
+      </div>
+      <div id="lista-sinistros-${s.id}">${renderSinistros(s.id)}</div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-p" onclick="closeFicha();openNovoSeguro('${s.id}')">✏️ Editar</button>
+      <button class="btn-g" onclick="exportarFichaAssociado('${s.id}')">📄 Exportar PDF</button>
       <button class="btn-g" onclick="closeFicha()">Fechar</button>
     </div>
   `;
