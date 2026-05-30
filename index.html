@@ -567,6 +567,16 @@ async function renderEstoque(sec){
           return norm;
         });
         save(KV,merged);
+        // Carrega docs de todos os veículos para a bolinha do card
+        try{
+          const docPromises=merged.map(v=>apiRequest('GET',`/api/documentos/${v.id}`).catch(()=>({})));
+          const docsResults=await Promise.all(docPromises);
+          const allDocs=docsResults.flatMap((r,i)=>(r?.documentos||[]).map(d=>({
+            id:d.id,veiculoId:merged[i].id,nome:d.nome,status:d.status,obs:d.obs||'',
+            pdfUrl:d.pdf_url||null,pdfNome:d.pdf_nome||null,fotoUrl:d.foto_url||null,fotoNome:d.foto_nome||null
+          })));
+          if(allDocs.length)save(KD,allDocs);
+        }catch(e){}
       }
       const sdata=await apiRequest('GET','/api/vendedores');
       if(sdata?.vendedores){save(KS,sdata.vendedores);}
@@ -647,19 +657,35 @@ function closeFicha(){
   document.getElementById('ficha-overlay').classList.remove('open');
 }
 async function verFichaVeh(id){
-  const vs=load(KV),sellers=load(KS),docs=load(KD);
+  const vs=load(KV),sellers=load(KS);
   const v=vs.find(x=>x.id===id);if(!v)return;
   const seller=v.vendedorId?sellers.find(s=>s.id===v.vendedorId):null;
-  const vDocs=docs.filter(d=>d.veiculoId===id);
 
   document.getElementById('ficha-title').textContent=v.marca+' '+v.modelo+' '+v.ano;
+  document.getElementById('ficha-body').innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:32px 0">Carregando...</div>';
+  document.getElementById('ficha-panel').classList.add('open');
+  document.getElementById('ficha-overlay').classList.add('open');
 
-  // Busca fotos do servidor ou localStorage
-  let fotos=[];
+  // Busca fotos e docs do servidor em paralelo
+  let fotos=[], vDocs=[];
   if(CU?.fromServer){
-    try{const fd=await apiRequest('GET',`/api/cloudinary/fotos/${id}`);fotos=fd?.fotos||[];}catch(e){}
+    const [fd,dd]=await Promise.all([
+      apiRequest('GET',`/api/cloudinary/fotos/${id}`).catch(()=>({})),
+      apiRequest('GET',`/api/documentos/${id}`).catch(()=>({}))
+    ]);
+    fotos=fd?.fotos||[];
+    vDocs=(dd?.documentos||[]).map(d=>({
+      id:d.id, veiculoId:d.veiculo_id, nome:d.nome,
+      status:d.status, obs:d.obs||'',
+      pdfUrl:d.pdf_url||null, pdfNome:d.pdf_nome||null,
+      fotoUrl:d.foto_url||null, fotoNome:d.foto_nome||null
+    }));
+    // Salva no localStorage para a bolinha do estoque
+    const localDocs=load(KD).filter(d=>d.veiculoId!==id);
+    save(KD,[...localDocs,...vDocs]);
   } else {
     fotos=load(KF).filter(f=>f.veiculoId===id);
+    vDocs=load(KD).filter(d=>d.veiculoId===id);
   }
 
   const itensArr=Array.isArray(v.itens)?v.itens:(v.itens?String(v.itens).split(',').map(s=>s.trim()):[]);
@@ -724,8 +750,6 @@ async function verFichaVeh(id){
       <div class="ficha-field"><div class="ficha-value" style="font-size:12px;line-height:1.5">${v.obs}</div></div>
     </div>`:''}
   `;
-  document.getElementById('ficha-panel').classList.add('open');
-  document.getElementById('ficha-overlay').classList.add('open');
 }
 async function excluirVeh(id){
   if(!confirm('Excluir este veículo? As fotos e documentos também serão removidos.'))return;
