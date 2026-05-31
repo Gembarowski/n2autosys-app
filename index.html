@@ -236,6 +236,44 @@ textarea{resize:vertical;min-height:64px}
   </div>
 </div>
 
+<!-- TELA DE BLOQUEIO POR INADIMPLÊNCIA -->
+<div id="payment-wall" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:999;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-y:auto">
+  <div style="max-width:480px;width:100%;text-align:center">
+    <div style="width:56px;height:56px;background:var(--amber);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">🚗</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--text);margin-bottom:4px">N2 <span style="color:var(--amber)">AutoSYS</span></div>
+    <div style="background:rgba(224,82,82,0.1);border:1px solid var(--red);border-radius:12px;padding:20px;margin:24px 0">
+      <div style="font-size:32px;margin-bottom:8px">⚠️</div>
+      <div style="font-size:18px;font-weight:700;color:var(--red);margin-bottom:8px">Acesso suspenso</div>
+      <div style="font-size:14px;color:var(--text2);line-height:1.6" id="pw-msg">Sua mensalidade está vencida. Renove para continuar usando o sistema.</div>
+    </div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text3);margin-bottom:8px">Valor da mensalidade</div>
+      <div style="font-size:40px;font-weight:900;font-family:'Barlow Condensed',sans-serif;color:var(--amber);margin-bottom:20px" id="pw-valor">R$ 99,90</div>
+      <div id="pw-qr-area" style="display:none">
+        <div style="background:white;border-radius:12px;padding:12px;display:inline-block;margin-bottom:12px">
+          <img id="pw-qr-img" src="" style="width:180px;height:180px"/>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Escaneie o QR Code com seu app do banco</div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          <div id="pw-pix-code" style="font-size:10px;color:var(--text2);flex:1;word-break:break-all;text-align:left;font-family:'JetBrains Mono',monospace;max-height:60px;overflow:hidden"></div>
+          <button onclick="copiarPix()" style="background:var(--amber);border:none;border-radius:6px;color:var(--bg);font-size:11px;font-weight:700;padding:6px 10px;cursor:pointer;white-space:nowrap">📋 Copiar</button>
+        </div>
+        <button onclick="verificarPagamento()" style="background:var(--green);border:none;border-radius:8px;color:white;font-size:14px;font-weight:700;padding:12px 32px;cursor:pointer;width:100%;margin-bottom:8px">✅ Já paguei — verificar</button>
+        <div id="pw-verificando" style="display:none;font-size:12px;color:var(--text3);padding:8px">Verificando pagamento...</div>
+      </div>
+      <div id="pw-gerar-area">
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+          <input id="pw-nome" placeholder="Seu nome completo" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none"/>
+          <input id="pw-email" placeholder="Seu e-mail" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none"/>
+          <input id="pw-cpf" placeholder="CPF (apenas números)" maxlength="11" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none"/>
+        </div>
+        <button onclick="gerarPixPagamento()" id="pw-btn-pix" style="background:var(--amber);border:none;border-radius:8px;color:var(--bg);font-size:15px;font-weight:700;padding:14px 32px;cursor:pointer;width:100%">⚡ Gerar PIX para pagamento</button>
+      </div>
+    </div>
+    <button onclick="doLogout()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:13px;padding:10px 24px;cursor:pointer">Sair do sistema</button>
+  </div>
+</div>
+
 <!-- ══ APP ══════════════════════════════════════════════════════ -->
 <div id="app" class="app">
   <div class="topbar" id="topbar">
@@ -413,6 +451,7 @@ async function doLogin(){
         telefone:data.user.telefone||'',
         fromServer:true,
         token:data.token,
+        pagamento:data.pagamento||null,
         empresaId:data.empresa?.id,
         empresaNome:data.empresa?.nome,
       };
@@ -422,11 +461,22 @@ async function doLogin(){
       document.getElementById('login-wrap').style.display='none';
       document.getElementById('app').style.display='flex';
       initApp();
+      // Aviso de vencimento próximo
+      if(data.pagamento?.aviso && !data.pagamento?.vencida){
+        const dias=data.pagamento.dias_restantes;
+        const av=document.getElementById('venc-aviso');
+        if(av){av.style.display='flex';av.querySelector('span').textContent='⚠️ Mensalidade vence em '+dias+' dia'+(dias!==1?'s':'')+'!';}
+      }
       return;
     }
 
-    // Servidor retornou erro (credenciais inválidas)
+    // Servidor retornou erro
     const err=await resp.json();
+    if(resp.status===402){
+      document.getElementById('login-wrap').style.display='none';
+      mostrarPaymentWall({...err,slug:getTenantSlug()});
+      return;
+    }
     const errEl=document.getElementById('login-err');
     errEl.textContent=err.error||'Usuário ou senha incorretos.';
     errEl.style.display='block';
@@ -490,6 +540,12 @@ async function apiRequest(method,path,body){
 function initApp(){
   const role=ROLES[CU.cargo]||ROLES.visualizador;
   // Mostra badge de empresa no topo se veio do servidor
+  // Mostrar aviso de vencimento próximo
+  if(CU.pagamento?.aviso && !CU.pagamento?.vencida){
+    const dias=CU.pagamento.dias_restantes;
+    const aviso=document.getElementById('venc-aviso');
+    if(aviso){aviso.style.display='flex';aviso.querySelector('span').textContent='⚠️ Mensalidade vence em '+dias+' dia'+(dias!==1?'s':'')+'!';}
+  }
   if(CU.fromServer&&CU.empresaNome){
     setTimeout(()=>{
       const topbar=document.getElementById('topbar');
@@ -2364,6 +2420,111 @@ async function exportarFichaAssociado(segId){
   doc.text('Gerado pelo N2 AutoSYS - '+new Date().toLocaleString('pt-BR'),W/2,287,{align:'center'});
   doc.save('associado-'+(s.placa||s.nomeSegurado||'ficha').replace(/\s/g,'-')+'.pdf');
   toast('PDF gerado!');
+}
+
+
+// ══ SISTEMA DE PAGAMENTO ════════════════════════════════════════
+var _pwOrderId = null;
+var _pwSlug = null;
+var _pwVerifInterval = null;
+
+function mostrarPaymentWall(dados){
+  _pwSlug = dados.slug || getTenantSlug();
+  var wall = document.getElementById('payment-wall');
+  var msg = document.getElementById('pw-msg');
+  var valor = document.getElementById('pw-valor');
+  if(!wall) return;
+  if(msg) msg.textContent = dados.vencida
+    ? 'Sua mensalidade venceu em '+dados.data_vencimento+'. Renove para continuar usando o sistema.'
+    : 'Acesso suspenso. Entre em contato com o administrador.';
+  if(valor) valor.textContent = 'R$ '+(parseFloat(dados.valor_mensalidade)||99.90).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  wall.style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function fecharPaymentWall(){
+  var wall = document.getElementById('payment-wall');
+  if(wall) wall.style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+}
+
+async function gerarPixPagamento(){
+  var nome = document.getElementById('pw-nome')?.value.trim();
+  var email = document.getElementById('pw-email')?.value.trim();
+  var cpf = document.getElementById('pw-cpf')?.value.trim();
+  if(!nome){alert('Informe seu nome');return;}
+  if(!email){alert('Informe seu e-mail');return;}
+  if(!cpf||cpf.length<11){alert('Informe seu CPF (11 dígitos)');return;}
+
+  var btn = document.getElementById('pw-btn-pix');
+  if(btn){btn.textContent='Gerando PIX...';btn.disabled=true;}
+
+  try{
+    var resp = await fetch(API_URL+'/api/pagamentos/pix',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({slug:_pwSlug, nome_pagador:nome, email_pagador:email, cpf_pagador:cpf})
+    });
+    var data = await resp.json();
+
+    if(!resp.ok){
+      alert(data.error||'Erro ao gerar PIX');
+      if(btn){btn.textContent='⚡ Gerar PIX para pagamento';btn.disabled=false;}
+      return;
+    }
+
+    _pwOrderId = data.order_id;
+
+    // Mostrar QR Code
+    document.getElementById('pw-gerar-area').style.display='none';
+    document.getElementById('pw-qr-area').style.display='block';
+
+    if(data.pix_qr_base64){
+      document.getElementById('pw-qr-img').src='data:image/png;base64,'+data.pix_qr_base64;
+    }
+    if(data.pix_copia_cola){
+      document.getElementById('pw-pix-code').textContent=data.pix_copia_cola;
+    }
+
+    // Verificar automaticamente a cada 10s
+    _pwVerifInterval = setInterval(function(){verificarPagamentoAuto();}, 10000);
+
+  }catch(e){
+    alert('Erro de conexão ao gerar PIX');
+    if(btn){btn.textContent='⚡ Gerar PIX para pagamento';btn.disabled=false;}
+  }
+}
+
+async function verificarPagamento(){
+  if(!_pwOrderId){alert('Nenhum PIX gerado ainda');return;}
+  var el = document.getElementById('pw-verificando');
+  if(el) el.style.display='block';
+  await verificarPagamentoAuto(true);
+  if(el) el.style.display='none';
+}
+
+async function verificarPagamentoAuto(manual){
+  if(!_pwOrderId) return;
+  try{
+    var resp = await fetch(API_URL+'/api/pagamentos/verificar-order/'+_pwOrderId);
+    var data = await resp.json();
+    if(data.pago){
+      clearInterval(_pwVerifInterval);
+      alert('Pagamento confirmado! Bem-vindo de volta!');
+      fecharPaymentWall();
+      // Recarrega sessão
+      location.reload();
+    } else if(manual){
+      alert('Pagamento ainda não identificado. Tente novamente em alguns instantes.');
+    }
+  }catch(e){ if(manual) alert('Erro ao verificar. Tente novamente.'); }
+}
+
+function copiarPix(){
+  var code = document.getElementById('pw-pix-code')?.textContent;
+  if(code){
+    navigator.clipboard.writeText(code).then(function(){toast('Código PIX copiado!');}).catch(function(){});
+  }
 }
 
 
